@@ -1,0 +1,3523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Portal Calidad – PDC</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  /* ── RESET & BASE ─────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green:   #2e7d32;
+    --green-l: #43a047;
+    --green-d: #1b5e20;
+    --gray:    #f4f6f8;
+    --border:  #dde1e7;
+    --text:    #212121;
+    --muted:   #6b7280;
+    --red:     #c62828;
+    --ok-bg:   #e8f5e9;
+    --ok-txt:  #2e7d32;
+    --warn-bg: #fff3e0;
+    --warn-txt:#e65100;
+    --radius:  8px;
+    --shadow:  0 2px 8px rgba(0,0,0,.12);
+  }
+  body { font-family: 'Segoe UI', sans-serif; background: var(--gray); color: var(--text); min-height: 100vh; }
+
+  /* ── LOGIN ────────────────────────────────────── */
+  #loginPage {
+    display: flex; align-items: center; justify-content: center; min-height: 100vh;
+    background: linear-gradient(135deg, var(--green-d) 0%, var(--green-l) 100%);
+  }
+  .login-card {
+    background: #fff; border-radius: 12px; padding: 2.5rem 2rem;
+    width: 100%; max-width: 380px; box-shadow: 0 8px 32px rgba(0,0,0,.25);
+  }
+  .login-logo { text-align: center; margin-bottom: 1.5rem; }
+  .login-logo span { font-size: 2.5rem; }
+  .login-logo h1 { color: var(--green-d); font-size: 1.3rem; margin-top: .4rem; }
+  .login-logo p  { color: var(--muted); font-size: .85rem; }
+
+  /* ── APP SHELL ────────────────────────────────── */
+  #appPage { display: none; flex-direction: column; min-height: 100vh; }
+
+  /* NAVBAR */
+  .navbar {
+    background: var(--green-d); color: #fff; padding: .8rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100;
+  }
+  .navbar-brand { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: .5rem; }
+  .navbar-user  { display: flex; align-items: center; gap: .8rem; font-size: .9rem; }
+  .badge-rol    { background: rgba(255,255,255,.2); border-radius: 20px; padding: .2rem .7rem; font-size: .75rem; }
+
+  /* SIDEBAR + MAIN */
+  .layout { display: flex; flex: 1; }
+  .sidebar {
+    width: 220px; background: #fff; border-right: 1px solid var(--border);
+    padding: 1rem 0; flex-shrink: 0;
+  }
+  .sidebar-item {
+    display: flex; align-items: center; gap: .7rem;
+    padding: .7rem 1.2rem; cursor: pointer; font-size: .92rem;
+    color: var(--text); transition: background .15s;
+    border-left: 3px solid transparent;
+  }
+  .sidebar-item:hover   { background: var(--gray); }
+  .sidebar-item.active  { background: var(--ok-bg); color: var(--green-d); border-left-color: var(--green); font-weight: 600; }
+
+  .main { flex: 1; padding: 1.5rem; overflow-x: auto; }
+
+  /* ── CARDS / PANELES ──────────────────────────── */
+  .panel { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.5rem; margin-bottom: 1.5rem; }
+  .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; }
+  .panel-title  { font-size: 1.05rem; font-weight: 700; color: var(--green-d); display: flex; align-items: center; gap: .5rem; }
+
+  /* ── FORM ─────────────────────────────────────── */
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 1rem; }
+  .form-group { display: flex; flex-direction: column; gap: .3rem; }
+  .form-group label { font-size: .82rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  .form-group input,
+  .form-group select { border: 1px solid var(--border); border-radius: var(--radius); padding: .52rem .75rem; font-size: .9rem; transition: border-color .2s; }
+  .form-group input:focus,
+  .form-group select:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(46,125,50,.12); }
+
+  /* ── BUTTONS ──────────────────────────────────── */
+  .btn { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem 1.2rem; border-radius: var(--radius); border: none; font-size: .9rem; font-weight: 600; cursor: pointer; transition: opacity .15s, transform .1s; }
+  .btn:active { transform: scale(.97); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-primary  { background: var(--green);   color: #fff; }
+  .btn-primary:hover { background: var(--green-d); }
+  .btn-outline  { background: #fff; color: var(--green); border: 1px solid var(--green); }
+  .btn-outline:hover { background: var(--ok-bg); }
+  .btn-danger   { background: var(--red); color: #fff; }
+  .btn-sm { padding: .3rem .7rem; font-size: .8rem; }
+
+  /* ── TABLE ────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .83rem; white-space: nowrap; }
+  th { background: var(--green-d); color: #fff; padding: .6rem .8rem; font-weight: 600; text-align: left; position: sticky; top: 0; }
+  td { padding: .55rem .8rem; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: var(--gray); }
+  .status-badge  { padding: .2rem .6rem; border-radius: 20px; font-size: .75rem; font-weight: 700; }
+  .s-procesado   { background: #e8f5e9; color: #2e7d32; }   /* verde */
+  .s-piso        { background: #fffde7; color: #f57f17; }   /* amarillo */
+  .s-proceso     { background: #e3f2fd; color: #1565c0; }   /* azul */
+  .s-descargar   { background: #fff3e0; color: #e65100; }   /* naranja */
+  .s-rechazado   { background: #ffebee; color: #c62828; }   /* rojo */
+  .s-rojo        { background: #ffebee; color: #c62828; }   /* rojo (gen) */
+  .s-default     { background: #ede7f6; color: #4527a0; }
+  .ok-cell       { color: var(--green); font-weight: 700; }
+  .nok-cell      { color: var(--red);   font-weight: 700; }
+  /* Input con símbolo % */
+  .pct-wrap      { position: relative; }
+  .pct-wrap input { padding-right: 1.8rem; }
+  .pct-wrap .pct-sym {
+    position: absolute; right: .7rem; top: 50%; transform: translateY(-50%);
+    color: var(--muted); pointer-events: none; font-size: .9rem;
+  }
+
+  /* ── TOAST ────────────────────────────────────── */
+  #toast {
+    position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
+    background: #323232; color: #fff; padding: .8rem 1.4rem;
+    border-radius: var(--radius); font-size: .88rem; box-shadow: var(--shadow);
+    transform: translateY(80px); opacity: 0; transition: all .3s ease;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.error { background: var(--red); }
+  #toast.success { background: var(--green); }
+
+  /* ── LOADER ───────────────────────────────────── */
+  .loader { text-align: center; padding: 2rem; color: var(--muted); }
+  .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── MODAL ────────────────────────────────────── */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal-box { background: #fff; border-radius: 12px; padding: 1.8rem; width: 95%; max-width: 860px; max-height: 90vh; overflow-y: auto; box-shadow: 0 16px 48px rgba(0,0,0,.3); }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; }
+  .modal-title  { font-size: 1.05rem; font-weight: 700; color: var(--green-d); }
+  .modal-close  { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--muted); line-height: 1; }
+  .modal-footer { margin-top: 1.2rem; display: flex; gap: .7rem; justify-content: flex-end; }
+
+  /* ── SEARCH ───────────────────────────────────── */
+  .search-bar { display: flex; gap: .7rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+  .search-bar input { border: 1px solid var(--border); border-radius: var(--radius); padding: .45rem .75rem; font-size: .88rem; min-width: 220px; }
+
+  /* ── EVAL MODULE ──────────────────────────────── */
+  .fuc-search-box { display:flex; gap:.7rem; align-items:center; flex-wrap:wrap; }
+  .fuc-search-box input { flex:1; min-width:200px; border:1px solid var(--border); border-radius:var(--radius); padding:.52rem .75rem; font-size:.9rem; }
+  .fuc-search-box input:focus { outline:none; border-color:var(--green); box-shadow:0 0 0 3px rgba(46,125,50,.12); }
+
+  .fuc-info-card {
+    display:none; background:var(--ok-bg); border:1px solid #a5d6a7;
+    border-radius:var(--radius); padding:1rem 1.2rem; margin-top:1rem;
+  }
+  .fuc-info-card.show { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:.6rem 1.2rem; }
+  .fuc-info-item label { font-size:.75rem; font-weight:700; color:var(--green-d); text-transform:uppercase; display:block; }
+  .fuc-info-item span  { font-size:.92rem; color:var(--text); }
+
+  /* Multi-select custom dropdown */
+  .multisel-wrap  { position:relative; }
+  .multisel-btn   {
+    width:100%; border:1px solid var(--border); border-radius:var(--radius);
+    padding:.52rem .75rem; font-size:.9rem; background:#fff; cursor:pointer;
+    text-align:left; display:flex; justify-content:space-between; align-items:center;
+  }
+  .multisel-btn:focus { outline:none; border-color:var(--green); box-shadow:0 0 0 3px rgba(46,125,50,.12); }
+  .multisel-dropdown {
+    display:none; position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:50;
+    background:#fff; border:1px solid var(--border); border-radius:var(--radius);
+    box-shadow:var(--shadow); max-height:220px; overflow-y:auto;
+  }
+  .multisel-dropdown.open { display:block; }
+  .multisel-option { display:flex; align-items:center; gap:.5rem; padding:.5rem .85rem; cursor:pointer; font-size:.88rem; }
+  .multisel-option:hover { background:var(--gray); }
+  .multisel-option input[type=checkbox] { accent-color:var(--green); width:15px; height:15px; cursor:pointer; }
+  .multisel-tags  { display:flex; flex-wrap:wrap; gap:.3rem; margin-top:.4rem; min-height:22px; }
+  .multisel-tag   { background:var(--green); color:#fff; font-size:.75rem; padding:.2rem .55rem; border-radius:12px; display:flex; align-items:center; gap:.3rem; }
+  .multisel-tag button { background:none; border:none; color:#fff; cursor:pointer; font-size:.85rem; line-height:1; padding:0; }
+
+  /* Eval history cards */
+  .eval-cards { display:flex; flex-direction:column; gap:.8rem; }
+  .eval-card  {
+    background:#fff; border:1px solid var(--border); border-radius:var(--radius);
+    padding:1rem 1.2rem; position:relative;
+  }
+  .eval-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:.7rem; }
+  .eval-badge { background:var(--green); color:#fff; border-radius:20px; font-size:.78rem; font-weight:700; padding:.2rem .7rem; }
+  .eval-grid  { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:.5rem .9rem; }
+  .eval-field label { font-size:.72rem; font-weight:700; color:var(--muted); text-transform:uppercase; display:block; }
+  .eval-field span  { font-size:.9rem; }
+  .eval-obs   { margin-top:.6rem; font-size:.85rem; color:var(--muted); font-style:italic; }
+  .eval-defects { margin-top:.5rem; display:flex; flex-wrap:wrap; gap:.3rem; }
+  .defect-chip { background:#fce4ec; color:#b71c1c; border-radius:12px; font-size:.75rem; padding:.2rem .6rem; font-weight:600; }
+
+  /* ── SIDEBAR AGRUPADO ────────────────────────── */
+  .sidebar-section {
+    font-size:.72rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.5px; color:var(--muted);
+    padding:.75rem 1.2rem .6rem; margin-top:.3rem;
+    border-top:1px solid var(--border);
+    cursor:pointer; display:flex; align-items:center; justify-content:space-between;
+    user-select:none;
+  }
+  .sidebar-section:hover { color:var(--green-d); }
+  .sidebar-section .sec-arrow { font-size:.7rem; transition:transform .2s; }
+  .sidebar-section.open .sec-arrow { transform:rotate(90deg); }
+  .sidebar-subnav { overflow:hidden; max-height:0; transition:max-height .3s ease; }
+  .sidebar-subnav.open { max-height:400px; }
+  .sidebar-subitem { padding-left:2rem; font-size:.88rem; }
+
+  /* ── FILTROS MULTI-SELECT ─────────────────────── */
+  .report-filters {
+    display:flex; gap:.8rem; flex-wrap:wrap; align-items:flex-end;
+    background:var(--gray); border-radius:var(--radius);
+    padding:.9rem 1rem; margin-bottom:1rem;
+    border:1px solid var(--border);
+  }
+  .report-filters .filter-group { display:flex; flex-direction:column; gap:.25rem; }
+  .report-filters label { font-size:.75rem; font-weight:700; color:var(--muted); text-transform:uppercase; }
+  /* custom multi-select dropdown */
+  .ms-wrap { position:relative; min-width:160px; }
+  .ms-btn {
+    width:100%; border:1px solid var(--border); border-radius:var(--radius);
+    padding:.42rem .7rem; font-size:.87rem; background:#fff;
+    cursor:pointer; text-align:left; display:flex; justify-content:space-between; align-items:center;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .ms-btn:focus { outline:none; border-color:var(--green); }
+  .ms-dropdown {
+    display:none; position:absolute; top:calc(100% + 2px); left:0; z-index:200;
+    background:#fff; border:1px solid var(--border); border-radius:var(--radius);
+    min-width:100%; max-height:220px; overflow-y:auto;
+    box-shadow:0 4px 16px rgba(0,0,0,.1);
+  }
+  .ms-dropdown.open { display:block; }
+  .ms-option {
+    display:flex; align-items:center; gap:.5rem;
+    padding:.4rem .7rem; cursor:pointer; font-size:.86rem;
+  }
+  .ms-option:hover { background:var(--gray); }
+  .ms-option input[type=checkbox] { accent-color:var(--green); cursor:pointer; }
+  /* date-range */
+  .date-range { display:flex; gap:.4rem; align-items:center; }
+  .date-range input {
+    border:1px solid var(--border); border-radius:var(--radius);
+    padding:.42rem .55rem; font-size:.84rem; background:#fff; width:130px;
+  }
+  .date-range input:focus { outline:none; border-color:var(--green); }
+  .date-range span { font-size:.8rem; color:var(--muted); }
+  .report-header {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:.6rem; padding-bottom:.6rem; border-bottom:2px solid var(--green-d);
+  }
+  .report-date { font-size:.82rem; color:var(--muted); }
+
+  /* ── EVAL LÍNEAS TABLE ───────────────────────── */
+  .linea-block {
+    border:1px solid var(--border); border-radius:var(--radius);
+    margin-bottom:1rem; overflow:hidden;
+  }
+  .linea-header {
+    background:var(--green-d); color:#fff;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:.5rem .9rem; font-weight:700; font-size:.9rem;
+  }
+  .linea-header button {
+    background:transparent; border:1px solid rgba(255,255,255,.4);
+    color:#fff; border-radius:4px; padding:.2rem .5rem;
+    cursor:pointer; font-size:.8rem;
+  }
+  .linea-header button:hover { background:rgba(255,255,255,.15); }
+  .eval-table-wrap { overflow-x:auto; }
+  .eval-table {
+    width:100%; border-collapse:collapse; font-size:.82rem; min-width:900px;
+  }
+  .eval-table th {
+    background:#f0f4f0; text-align:center; padding:.4rem .35rem;
+    border:1px solid var(--border); font-size:.75rem; font-weight:700;
+    color:var(--text); white-space:nowrap;
+  }
+  .eval-table th.th-ps { background:#e8f5e9; color:#2e7d32; }
+  .eval-table th.th-ss { background:#e3f2fd; color:#1565c0; }
+  .eval-table td {
+    border:1px solid var(--border); padding:.3rem .25rem; text-align:center;
+  }
+  .eval-table td select,
+  .eval-table td input[type=number],
+  .eval-table td input[type=text] {
+    width:100%; border:none; background:transparent; font-size:.82rem;
+    text-align:center; font-family:inherit; padding:.15rem .2rem;
+    min-width:60px;
+  }
+  .eval-table td select { min-width:80px; }
+  .eval-table td select:focus,
+  .eval-table td input:focus { outline:1px solid var(--green); border-radius:2px; }
+  .eval-table .btn-rm-row {
+    background:transparent; border:none; cursor:pointer;
+    color:var(--red); font-size:1rem; padding:.1rem .3rem;
+  }
+  .linea-footer {
+    display:flex; padding:.5rem .7rem; gap:.6rem; background:#fafafa;
+    border-top:1px solid var(--border);
+  }
+  .add-linea-bar {
+    display:flex; justify-content:flex-start; margin-bottom:1rem;
+  }
+
+  /* ── FUC LIST TABLES ─────────────────────────── */
+  .fuc-list-header {
+    display:flex; align-items:center; gap:.5rem;
+    font-size:.82rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px;
+    padding:.5rem .2rem; margin-bottom:.4rem; border-bottom:2px solid;
+  }
+  .fuc-list-header.pending   { color:var(--warn-txt); border-color:var(--warn-txt); }
+  .fuc-list-header.evaluated { color:var(--green);    border-color:var(--green); }
+  .fuc-list-row { cursor:pointer; }
+  .fuc-list-row:hover td { background:var(--ok-bg) !important; }
+  .fuc-list-row.active  td { background:#e3f2fd !important; }
+  .eval-count { background:var(--green); color:#fff; border-radius:12px; font-size:.73rem; padding:.15rem .55rem; font-weight:700; }
+  .fuc-section-wrap { margin-bottom:1.4rem; }
+  .fuc-info-card { margin-bottom:1rem; }   /* override: ahora está entre paneles */
+
+  /* ── UPLOAD ZONE ──────────────────────────────── */
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: var(--radius);
+    padding: 2rem; text-align: center; cursor: pointer;
+    transition: border-color .2s, background .2s; background: var(--gray);
+  }
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--green); background: var(--ok-bg); }
+  .upload-zone .upload-icon { font-size: 2.5rem; }
+  .upload-zone p { color: var(--muted); margin-top: .5rem; font-size: .88rem; }
+  .upload-zone strong { color: var(--green); }
+
+  /* ── RESULT CHIPS ─────────────────────────────── */
+  .result-chips { display: flex; gap: .7rem; flex-wrap: wrap; margin-top: 1rem; }
+  .chip { padding: .4rem 1rem; border-radius: 20px; font-size: .85rem; font-weight: 700; }
+  .chip-added   { background: #e8f5e9; color: #2e7d32; }
+  .chip-updated { background: #e3f2fd; color: #1565c0; }
+  .chip-skipped { background: #f5f5f5; color: #616161; }
+  .chip-total   { background: #ede7f6; color: #4527a0; }
+
+  /* ── HAMBURGER BUTTON ─────────────────────────── */
+  .hamburger-btn {
+    display: none;
+    background: none; border: none; cursor: pointer;
+    color: #fff; font-size: 1.4rem; padding: .2rem .4rem;
+    line-height: 1;
+  }
+
+  /* ── OVERLAY (móvil sidebar) ──────────────────── */
+  .sidebar-overlay {
+    display: none;
+    position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 149;
+  }
+  .sidebar-overlay.visible { display: block; }
+
+  /* ── RESPONSIVE ───────────────────────────────── */
+  @media (max-width: 768px) {
+    /* Hamburger visible */
+    .hamburger-btn { display: block; }
+
+    /* Sidebar: drawer slide-in */
+    .sidebar {
+      position: fixed; top: 0; left: -280px; height: 100%;
+      width: 260px; z-index: 150;
+      transition: left .25s ease;
+      border-radius: 0;
+      overflow-y: auto;
+    }
+    .sidebar.open { left: 0; }
+
+    /* Layout: sin sidebar fixed */
+    .app-body { flex-direction: column; }
+    .main-content { padding: .7rem; }
+
+    /* Formularios: una columna */
+    .form-grid { grid-template-columns: 1fr !important; }
+
+    /* Tablas: scroll horizontal */
+    .table-wrap, .data-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .data-table { min-width: 600px; }
+
+    /* Modales: ancho completo */
+    .modal-box {
+      width: 96vw !important;
+      max-width: 96vw !important;
+      max-height: 92vh;
+      overflow-y: auto;
+      margin: auto;
+    }
+
+    /* Panel header: stack en móvil si es largo */
+    .panel-header { flex-wrap: wrap; gap: .4rem; }
+
+    /* Filtros: columna */
+    .filter-bar { flex-direction: column; align-items: stretch; gap: .4rem; }
+    .filter-bar input, .filter-bar select { width: 100%; }
+
+    /* Navbar: ajuste */
+    .navbar { padding: .6rem 1rem; }
+    .navbar-brand { font-size: 1rem; }
+
+    /* Eval lineas tabla: comprimida */
+    .eval-lineas-table th, .eval-lineas-table td { padding: .25rem .3rem; font-size: .74rem; }
+
+    /* Multi-select dropdown: ancho completo */
+    .ms-dropdown { width: 100% !important; min-width: unset !important; }
+
+    /* Defecto row: stack */
+    .def-row { flex-wrap: wrap; }
+    .def-row input[type=number] { width: 60px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     LOGIN PAGE
+══════════════════════════════════════════════ -->
+<div id="loginPage">
+  <div class="login-card">
+    <div class="login-logo">
+      <span>🥑</span>
+      <h1>Portal Calidad</h1>
+      <p>Packing del Carmen SAC</p>
+    </div>
+    <div class="form-group" style="margin-bottom:.9rem">
+      <label>Usuario</label>
+      <input id="loginUser" type="text" placeholder="Ingresa tu usuario" autocomplete="username"/>
+    </div>
+    <div class="form-group" style="margin-bottom:1.3rem">
+      <label>Contraseña</label>
+      <input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password"/>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doLogin()">
+      Ingresar
+    </button>
+    <p id="loginError" style="color:var(--red);font-size:.83rem;margin-top:.7rem;text-align:center;display:none"></p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     APP PAGE
+══════════════════════════════════════════════ -->
+<div id="appPage">
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div style="display:flex;align-items:center;gap:.6rem">
+      <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Menú">☰</button>
+      <div class="navbar-brand">🥑 Portal Calidad</div>
+    </div>
+    <div class="navbar-user">
+      <span id="navNombre"></span>
+      <span class="badge-rol" id="navRol"></span>
+      <button class="btn btn-outline btn-sm" onclick="logout()">Salir</button>
+    </div>
+  </nav>
+  <!-- Overlay para cerrar sidebar en móvil -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-item active" id="nav-guias" onclick="showSection('guias',this)">
+        📋 Guías a Procesar
+      </div>
+      <div class="sidebar-item" id="nav-eval" onclick="showSection('eval',this)">
+        🔬 Eval. Salida de Máquina
+      </div>
+      <div class="sidebar-item" id="nav-despachos" onclick="showSection('despachos',this)">
+        🚢 Tiempos de Despacho
+      </div>
+      <div class="sidebar-section" id="secToggleBaseDatos" onclick="toggleBaseDatos()">
+        <span>📂 Base de Datos</span>
+        <span class="sec-arrow">▶</span>
+      </div>
+      <div class="sidebar-subnav" id="subnavBaseDatos">
+        <div class="sidebar-item sidebar-subitem" id="nav-fuc" onclick="showSection('fuc',this)">
+          📁 Base de FUC
+        </div>
+        <div class="sidebar-item sidebar-subitem" id="nav-productores" onclick="showSection('productores',this)">
+          👥 Base de Productores
+        </div>
+        <div class="sidebar-item sidebar-subitem" id="nav-defectos" onclick="showSection('defectos',this)">
+          ⚙️ Catálogo de Defectos
+        </div>
+        <div class="sidebar-item sidebar-subitem" id="nav-calibres" onclick="showSection('calibres',this)">
+          ⚖️ Base de Calibres
+        </div>
+        <div class="sidebar-item sidebar-subitem" id="nav-usuarios" onclick="showSection('usuarios',this)">
+          👤 Gestión de Usuarios
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+      <!-- ── SECCIÓN: GUÍAS ─────────────────────── -->
+      <div id="secGuias">
+
+        <!-- Botón + tabla -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">📋 Guías a Procesar</span>
+            <button class="btn btn-primary" onclick="openModal()">＋ Nueva Guía</button>
+          </div>
+
+          <div class="report-filters">
+            <div class="filter-group">
+              <label>Fecha de Ingreso</label>
+              <div class="date-range">
+                <input id="filtFechaDesde" type="date" oninput="filterGuias()" title="Desde"/>
+                <span>→</span>
+                <input id="filtFechaHasta" type="date" oninput="filterGuias()" title="Hasta"/>
+              </div>
+            </div>
+            <div class="filter-group">
+              <label>N° Guía</label>
+              <div class="ms-wrap" id="wrapGuia">
+                <button class="ms-btn" type="button" onclick="toggleMs('msGuia')" id="btnGuia">Todas <span>▾</span></button>
+                <div class="ms-dropdown" id="msGuia"></div>
+              </div>
+            </div>
+            <div class="filter-group">
+              <label>Variedad</label>
+              <div class="ms-wrap" id="wrapVariedad">
+                <button class="ms-btn" type="button" onclick="toggleMs('msVariedad')" id="btnVariedad">Todas <span>▾</span></button>
+                <div class="ms-dropdown" id="msVariedad"></div>
+              </div>
+            </div>
+            <div class="filter-group" style="flex-direction:row;align-items:flex-end;gap:.5rem;margin-top:auto">
+              <button class="btn btn-outline btn-sm" onclick="clearFiltersGuias()">✕ Limpiar</button>
+              <button class="btn btn-outline btn-sm" onclick="loadGuias()">🔄 Actualizar</button>
+            </div>
+          </div>
+
+          <div id="tableContainer" class="table-wrap">
+            <div class="loader"><div class="spinner"></div><p style="margin-top:.5rem">Cargando…</p></div>
+          </div>
+        </div>
+
+      </div><!-- /secGuias -->
+
+      <!-- ── SECCIÓN: BASE DE FUC ──────────────── -->
+      <div id="secFuc" style="display:none">
+
+        <!-- Upload -->
+        <div class="panel">
+          <div class="panel-title" style="margin-bottom:1rem">📁 Cargar Excel de FUC</div>
+
+          <div class="upload-zone" id="uploadZone"
+               onclick="document.getElementById('fileInput').click()"
+               ondragover="event.preventDefault();this.classList.add('drag')"
+               ondragleave="this.classList.remove('drag')"
+               ondrop="handleDrop(event)">
+            <div class="upload-icon">📄</div>
+            <p>Arrastra el Excel aquí o <strong>haz clic para seleccionar</strong></p>
+            <p>Formatos aceptados: .xlsx, .xls</p>
+          </div>
+          <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none" onchange="handleFile(this.files[0])"/>
+
+          <div id="uploadResult" style="display:none;margin-top:1rem">
+            <div id="uploadMsg" style="font-weight:600;margin-bottom:.3rem"></div>
+            <div class="result-chips" id="resultChips"></div>
+          </div>
+        </div>
+
+        <!-- Tabla FUC -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">📋 Fichas Únicas de Campo</span>
+            <button class="btn btn-outline btn-sm" onclick="loadFUCs()">🔄 Actualizar</button>
+          </div>
+          <div class="search-bar">
+            <input id="searchFUC" type="text" placeholder="Buscar por FUC, productor, lote…" oninput="filterFUCTable()"/>
+          </div>
+          <div id="fucTableContainer" class="table-wrap">
+            <div class="loader"><div class="spinner"></div><p style="margin-top:.5rem">Cargando…</p></div>
+          </div>
+        </div>
+
+      </div><!-- /secFuc -->
+
+      <!-- ── SECCIÓN: EVALUACIONES PT ─────────── -->
+      <div id="secEval" style="display:none">
+
+        <!-- Panel principal: búsqueda + listas de FUCs -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">🔬 Evaluaciones de Salida de Máquina</span>
+            <button class="btn btn-outline btn-sm" onclick="loadEvalModule()" title="Recargar">🔄 Recargar</button>
+          </div>
+
+          <!-- ⏳ Pendientes de evaluación → SELECT desplegable -->
+          <div class="fuc-section-wrap">
+            <div class="fuc-list-header pending">⏳ Pendientes de evaluación <span id="pendienteCount" style="font-weight:400;margin-left:.3rem"></span></div>
+            <div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;margin-top:.5rem">
+              <select id="pendienteSelect"
+                style="flex:1;min-width:220px;border:1px solid var(--border);border-radius:var(--radius);padding:.55rem .75rem;font-size:.9rem;color:var(--text)">
+                <option value="">— Selecciona un FUC para evaluar —</option>
+              </select>
+              <button class="btn btn-primary" onclick="evaluarSeleccionado()">Evaluar →</button>
+            </div>
+            <!-- Mensaje cuando todos están evaluados -->
+            <div id="fucPendientesTable" style="display:none"></div>
+          </div>
+
+          <!-- ✅ Evaluaciones registradas -->
+          <div class="fuc-section-wrap" style="margin-top:1.2rem">
+            <div class="fuc-list-header evaluated" style="justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+              <span>✅ Evaluaciones registradas <span id="evaluadoCount" style="font-weight:400;margin-left:.3rem"></span></span>
+              <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;font-weight:400">
+                <input id="evalSearchInput" type="text" placeholder="🔍 Buscar FUC, cultivo…"
+                       oninput="filterEvaluadosTable()"
+                       style="border:1px solid var(--border);border-radius:var(--radius);padding:.32rem .6rem;font-size:.82rem;width:190px;background:#fff;color:var(--text)"/>
+                <div style="display:flex;align-items:center;gap:.3rem">
+                  <input id="evalFechaDesde" type="date" oninput="filterEvaluadosTable()" title="Fecha desde"
+                         style="border:1px solid var(--border);border-radius:var(--radius);padding:.32rem .5rem;font-size:.8rem;background:#fff;color:var(--text);width:130px"/>
+                  <span style="font-size:.75rem;color:var(--muted)">→</span>
+                  <input id="evalFechaHasta" type="date" oninput="filterEvaluadosTable()" title="Fecha hasta"
+                         style="border:1px solid var(--border);border-radius:var(--radius);padding:.32rem .5rem;font-size:.8rem;background:#fff;color:var(--text);width:130px"/>
+                </div>
+                <button onclick="clearEvalFiltros()" style="background:transparent;border:1px solid rgba(255,255,255,.5);border-radius:var(--radius);color:inherit;padding:.28rem .6rem;font-size:.78rem;cursor:pointer">✕ Limpiar</button>
+              </div>
+            </div>
+            <div id="fucEvaluadosTable"><div class="loader"><div class="spinner"></div></div></div>
+          </div>
+
+          <datalist id="fucDatalist"></datalist>
+        </div>
+
+        <!-- Info del FUC seleccionado (aparece al hacer click) -->
+        <div class="fuc-info-card" id="fucInfoCard">
+          <div class="fuc-info-item"><label>N° FUC</label><span id="infoFUC"></span></div>
+          <div class="fuc-info-item"><label>Exportador / Cliente</label><span id="infoExportador"></span></div>
+          <div class="fuc-info-item"><label>Productor</label><span id="infoProductor"></span></div>
+          <div class="fuc-info-item"><label>Lote</label><span id="infoLote"></span></div>
+          <div class="fuc-info-item"><label>Guía Ingreso</label><span id="infoGuia"></span></div>
+          <div class="fuc-info-item"><label>Cultivo</label><span id="infoCultivo"></span></div>
+          <div class="fuc-info-item"><label>Variedad</label><span id="infoVariedad"></span></div>
+        </div>
+
+        <!-- Formulario nueva evaluación -->
+        <div class="panel" id="evalFormPanel" style="display:none">
+          <div class="panel-header">
+            <span class="panel-title" id="evalFormTitle">➕ Nueva Evaluación</span>
+            <button class="btn btn-outline btn-sm" onclick="cancelEditEval()">Cancelar edición</button>
+          </div>
+
+          <input type="hidden" id="evalEditRow"/>
+          <input type="hidden" id="evalEditId"/>
+
+          <!-- Resumen superior -->
+          <div style="margin-bottom:1rem;display:flex;gap:1.5rem;flex-wrap:wrap">
+            <div class="form-group" style="max-width:220px">
+              <label style="font-size:.8rem;font-weight:700;color:var(--green-d)">% EXPORTABLE EN LA SALIDA DE MÁQUINA 1</label>
+              <input id="evalPctExportable" type="number" step="0.01" min="0" max="100" placeholder="0.0"/>
+            </div>
+            <div class="form-group" style="max-width:220px">
+              <label style="font-size:.8rem;font-weight:700;color:var(--green-d)">% EXPORTABLE EN LA SALIDA DE MÁQUINA 2</label>
+              <input id="evalPctExportable2" type="number" step="0.01" min="0" max="100" placeholder="0.0"/>
+            </div>
+          </div>
+
+          <!-- Tabla dinámica de líneas (observaciones por línea incluidas) -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
+            <strong style="font-size:.9rem">Líneas de evaluación</strong>
+            <button class="btn btn-outline btn-sm" onclick="addLineaEval()">➕ Agregar Línea</button>
+          </div>
+          <div id="evalLineasContainer"></div>
+
+          <div style="margin-top:1rem;display:flex;gap:.7rem">
+            <button class="btn btn-primary" onclick="saveEvaluacion()">💾 Guardar Evaluación</button>
+          </div>
+        </div>
+
+        <!-- Historial de evaluaciones -->
+        <div class="panel" id="evalHistPanel" style="display:none">
+          <div class="panel-header">
+            <span class="panel-title">📋 Evaluaciones registradas</span>
+            <button class="btn btn-primary btn-sm" onclick="newEval()">➕ Nueva evaluación</button>
+          </div>
+          <div id="evalCards" class="eval-cards">
+            <div class="loader"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+      </div><!-- /secEval -->
+
+      <!-- ── SECCIÓN: BASE DE PRODUCTORES ─────────── -->
+      <div id="secProductores" style="display:none">
+
+        <!-- Upload -->
+        <div class="panel">
+          <div class="panel-title" style="margin-bottom:1rem">👥 Cargar Excel de Productores</div>
+
+          <div class="upload-zone" id="uploadZoneProd"
+               onclick="document.getElementById('fileProdInput').click()"
+               ondragover="event.preventDefault();this.classList.add('drag')"
+               ondragleave="this.classList.remove('drag')"
+               ondrop="handleDropProd(event)">
+            <div class="upload-icon">📄</div>
+            <p>Arrastra el Excel aquí o <strong>haz clic para seleccionar</strong></p>
+            <p>Formatos aceptados: .xlsx, .xls</p>
+          </div>
+          <input type="file" id="fileProdInput" accept=".xlsx,.xls" style="display:none"
+                 onchange="handleFileProd(this.files[0])"/>
+
+          <div id="uploadResultProd" style="display:none;margin-top:1rem">
+            <div id="uploadMsgProd" style="font-weight:600;margin-bottom:.3rem"></div>
+            <div class="result-chips" id="resultChipsProd"></div>
+          </div>
+        </div>
+
+        <!-- Tabla de Productores -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">📋 Registro de Productores y Lotes</span>
+            <div style="display:flex;gap:.5rem;align-items:center">
+              <input id="searchProd" type="text" placeholder="Buscar CLP, productor, lote…"
+                     oninput="filterProdTable()"
+                     style="border:1px solid var(--border);border-radius:var(--radius);padding:.4rem .7rem;font-size:.85rem;min-width:200px"/>
+              <button class="btn btn-outline btn-sm" onclick="loadProductores()">🔄</button>
+            </div>
+          </div>
+          <div id="prodTableContainer" class="table-wrap">
+            <div class="loader"><div class="spinner"></div><p style="margin-top:.5rem">Cargando…</p></div>
+          </div>
+        </div>
+
+      </div><!-- /secProductores -->
+
+      <!-- ── SECCIÓN: CATÁLOGO DE DEFECTOS ─────── -->
+      <div id="secDefectos" style="display:none">
+
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">⚙️ Catálogo de Defectos por Cultivo</span>
+          </div>
+
+          <!-- Formulario agregar/editar defecto -->
+          <div style="background:var(--gray);border-radius:var(--radius);padding:1rem;margin-bottom:1.2rem">
+            <div style="font-weight:700;font-size:.9rem;color:var(--green-d);margin-bottom:.8rem" id="defCatFormTitle">➕ Nuevo Defecto</div>
+            <input type="hidden" id="defCatEditRow"/>
+            <input type="hidden" id="defCatEditId"/>
+            <div class="form-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
+              <div class="form-group">
+                <label>Cultivo</label>
+                <input id="defCatCultivo" type="text" placeholder="Ej. Palta, Uva, Mango…" list="cultivosCatalog"/>
+                <datalist id="cultivosCatalog"></datalist>
+              </div>
+              <div class="form-group">
+                <label>Nombre del defecto</label>
+                <input id="defCatNombre" type="text" placeholder="Ej. Manchas superficiales"/>
+              </div>
+            </div>
+            <div style="margin-top:.8rem;display:flex;gap:.7rem">
+              <button class="btn btn-primary btn-sm" onclick="saveDefectoCatalog()">💾 Guardar</button>
+              <button class="btn btn-outline btn-sm" onclick="cancelDefectoCatalog()">Cancelar</button>
+            </div>
+          </div>
+
+          <!-- Filtro por cultivo -->
+          <div class="search-bar" style="margin-bottom:.8rem">
+            <select id="filtroCultivo" onchange="loadDefectosCatalog()" style="border:1px solid var(--border);border-radius:var(--radius);padding:.45rem .75rem;font-size:.88rem;">
+              <option value="">— Todos los cultivos —</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="loadDefectosCatalog()">🔄 Actualizar</button>
+          </div>
+
+          <!-- Tabla de defectos -->
+          <div id="defCatTableWrap" class="table-wrap">
+            <div class="loader"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+      </div><!-- /secDefectos -->
+
+      <!-- ── SECCIÓN: BASE DE CALIBRES ─────────── -->
+      <div id="secCalibres" style="display:none">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">⚖️ Base de Calibres por Cultivo</span>
+          </div>
+
+          <!-- Formulario agregar/editar calibre -->
+          <div style="background:var(--gray);border-radius:var(--radius);padding:1rem;margin-bottom:1.2rem">
+            <div style="font-weight:700;font-size:.9rem;color:var(--green-d);margin-bottom:.8rem" id="calFormTitle">➕ Nuevo Calibre</div>
+            <input type="hidden" id="calEditRow"/>
+            <div class="form-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">
+              <div class="form-group">
+                <label>Cultivo</label>
+                <input id="calCultivo" type="text" placeholder="Ej. Palta, Uva, Mango…" list="cultivosCalibres"/>
+                <datalist id="cultivosCalibres"></datalist>
+              </div>
+              <div class="form-group">
+                <label>Calibre</label>
+                <input id="calInput" type="text" placeholder="Ej: 3, X, 12…" maxlength="20"/>
+              </div>
+            </div>
+            <div style="margin-top:.8rem;display:flex;gap:.7rem">
+              <button class="btn btn-primary btn-sm" onclick="saveCalibre()">💾 Guardar</button>
+              <button class="btn btn-outline btn-sm" onclick="cancelCalEdit()" id="calCancelBtn" style="display:none">Cancelar</button>
+            </div>
+          </div>
+
+          <!-- Filtro por cultivo -->
+          <div class="search-bar" style="margin-bottom:.8rem">
+            <select id="filtroCultivoCalibres" onchange="loadCalibres()" style="border:1px solid var(--border);border-radius:var(--radius);padding:.45rem .75rem;font-size:.88rem;">
+              <option value="">— Todos los cultivos —</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="loadCalibres()">🔄 Actualizar</button>
+          </div>
+
+          <!-- Tabla agrupada por cultivo -->
+          <div id="calibresTable" class="table-wrap">
+            <div class="loader"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div><!-- /secCalibres -->
+
+      <!-- ── SECCIÓN: GESTIÓN DE USUARIOS ──────── -->
+      <div id="secUsuarios" style="display:none">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">👤 Gestión de Usuarios</span>
+            <button class="btn btn-primary btn-sm" onclick="openUsuarioModal()">＋ Nuevo Usuario</button>
+          </div>
+          <div id="usuariosTable" class="table-wrap">
+            <div class="loader"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div><!-- /secUsuarios -->
+
+      <!-- ── SECCIÓN: TIEMPOS DE DESPACHO ──────── -->
+      <div id="secDespachos" style="display:none">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">🚢 Tiempos de Despacho</span>
+            <button class="btn btn-primary btn-sm" onclick="openDespachoModal()">＋ Nuevo Despacho</button>
+          </div>
+          <div id="despachosTable" class="table-wrap">
+            <div class="loader"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div><!-- /secDespachos -->
+
+    </main>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODAL – FORMULARIO GUÍA
+══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="guiaModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Nueva Guía</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <input type="hidden" id="editRow"/>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Variedad</label>
+        <select id="fVariedad">
+          <option value="">-- Seleccionar --</option>
+          <option value="HASS">HASS</option>
+          <option value="FUERTE">FUERTE</option>
+          <option value="ZUTANO">ZUTANO</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Cliente</label>
+        <input id="fCliente" type="text" placeholder="Nombre del cliente"/>
+      </div>
+      <div class="form-group">
+        <label>Cód. Prod. Etiq.</label>
+        <input id="fCodProdEtiq" type="text" readonly placeholder="Se llena al seleccionar CLP" style="background:#f5f5f5;cursor:not-allowed;"/>
+      </div>
+      <div class="form-group">
+        <label>Fecha de Ingreso</label>
+        <input id="fFechaIngreso" type="date"/>
+      </div>
+      <div class="form-group">
+        <label>N° Guía</label>
+        <input id="fNGuia" type="text" placeholder="Ej. EG07-4173"/>
+      </div>
+      <div class="form-group">
+        <label>CLP <span style="font-weight:400;color:var(--green);font-size:.75rem">↩ autocompleta campos</span></label>
+        <input id="fCLP" type="text" placeholder="Ej. 016-00195-02" list="clpDatalist"
+               onchange="autoFillFromCLP(this.value)"/>
+        <datalist id="clpDatalist"></datalist>
+      </div>
+      <div class="form-group">
+        <label>Productor</label>
+        <input id="fProductor" type="text" placeholder="Nombre del productor"/>
+      </div>
+      <div class="form-group">
+        <label>Lote</label>
+        <input id="fLote" type="text" placeholder="Nombre del lote"/>
+      </div>
+      <div class="form-group">
+        <label>Certificado de CLP</label>
+        <select id="fCertLP">
+          <option value="">-- Seleccionar --</option>
+          <option value="OK">OK</option>
+          <option value="PENDIENTE">PENDIENTE</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>MTD</label>
+        <select id="fMTD">
+          <option value="">-- Seleccionar --</option>
+          <option value="OK">OK</option>
+          <option value="MTD ELEVADO">MTD ELEVADO</option>
+          <option value="SIN TRAMPAS">SIN TRAMPAS</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Materia Seca</label>
+        <select id="fMateriaSeca">
+          <option value="">-- Seleccionar --</option>
+          <option value="OK">OK</option>
+          <option value="PENDIENTE">PENDIENTE</option>
+          <option value="MS BAJA">MS BAJA</option>
+          <option value="MS ALTA">MS ALTA</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>QR / DJ</label>
+        <select id="fQRDUA">
+          <option value="">-- Seleccionar --</option>
+          <option value="OK">OK</option>
+          <option value="PENDIENTE DJ">PENDIENTE DJ</option>
+          <option value="PENDIENTE QR">PENDIENTE QR</option>
+          <option value="CORREGIR QR">CORREGIR QR</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Vinculación de SIS</label>
+        <select id="fVinculacionSISA">
+          <option value="">-- Seleccionar --</option>
+          <option value="OK">OK</option>
+          <option value="NO FIGURA EN SIS">NO FIGURA EN SIS</option>
+          <option value="EXCEDE KILOS">EXCEDE KILOS</option>
+          <option value="PENDIENTE POR RECEPCION">PENDIENTE POR RECEPCION</option>
+          <option value="PENDIENTE POR CLIENTE">PENDIENTE POR CLIENTE</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>% de Queresa</label>
+        <div class="pct-wrap">
+          <input id="fPctDif" type="number" step="0.01" placeholder="0.00" min="0" max="100"/>
+          <span class="pct-sym">%</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="fStatus">
+          <option value="">-- Seleccionar --</option>
+          <option value="POR DESCARGAR">POR DESCARGAR</option>
+          <option value="EN PISO">EN PISO</option>
+          <option value="EN PROCESO">EN PROCESO</option>
+          <option value="PROCESADO">PROCESADO</option>
+          <option value="RECHAZADO">RECHAZADO</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btnGuardar" onclick="saveGuia()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL – USUARIO -->
+<div class="modal-overlay" id="usuarioModal">
+  <div class="modal-box" style="max-width:540px">
+    <div class="modal-header">
+      <span class="modal-title" id="usuarioModalTitle">Nuevo Usuario</span>
+      <button class="modal-close" onclick="closeUsuarioModal()">✕</button>
+    </div>
+    <input type="hidden" id="uEditRow"/>
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="form-group">
+        <label>Usuario</label>
+        <input id="uUsuario" type="text" placeholder="nombre_usuario" autocomplete="off"/>
+      </div>
+      <div class="form-group">
+        <label>Contraseña <span id="uPassNote" style="font-weight:400;color:var(--green);font-size:.75rem">(requerida)</span></label>
+        <input id="uPass" type="password" placeholder="••••••••" autocomplete="new-password"/>
+      </div>
+      <div class="form-group">
+        <label>Nombre completo</label>
+        <input id="uNombre" type="text" placeholder="Ej. María García"/>
+      </div>
+      <div class="form-group">
+        <label>Rol</label>
+        <select id="uRol">
+          <option value="operario">Operario</option>
+          <option value="analista">Analista</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:1rem">
+      <label style="font-size:.82rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:.6rem">Accesos por módulo</label>
+      <div id="uAccesosWrap" style="display:flex;flex-wrap:wrap;gap:.5rem .9rem">
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.88rem;cursor:pointer">
+          <input type="checkbox" id="uAccAll" style="accent-color:var(--green);width:15px;height:15px" onchange="toggleAllAccesos(this)"> <strong>Todos los módulos</strong>
+        </label>
+        <div style="width:100%;height:0;border-bottom:1px dashed var(--border);margin:.2rem 0"></div>
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.86rem;cursor:pointer"><input type="checkbox" class="acc-chk" value="guias" style="accent-color:var(--green);width:14px;height:14px"> 📋 Guías a Procesar</label>
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.86rem;cursor:pointer"><input type="checkbox" class="acc-chk" value="eval" style="accent-color:var(--green);width:14px;height:14px"> 🔬 Eval. Salida de Máquina</label>
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.86rem;cursor:pointer"><input type="checkbox" class="acc-chk" value="fuc" style="accent-color:var(--green);width:14px;height:14px"> 📁 Base de FUC</label>
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.86rem;cursor:pointer"><input type="checkbox" class="acc-chk" value="productores" style="accent-color:var(--green);width:14px;height:14px"> 👥 Base de Productores</label>
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.86rem;cursor:pointer"><input type="checkbox" class="acc-chk" value="defectos" style="accent-color:var(--green);width:14px;height:14px"> ⚙️ Catálogo de Defectos</label>
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.86rem;cursor:pointer"><input type="checkbox" class="acc-chk" value="calibres" style="accent-color:var(--green);width:14px;height:14px"> ⚖️ Base de Calibres</label>
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.86rem;cursor:pointer"><input type="checkbox" class="acc-chk" value="usuarios" style="accent-color:var(--green);width:14px;height:14px"> 👤 Gestión de Usuarios</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeUsuarioModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUsuario()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL – DESPACHO -->
+<div class="modal-overlay" id="despachoModal">
+  <div class="modal-box" style="max-width:680px">
+    <div class="modal-header">
+      <span class="modal-title" id="despachoModalTitle">Nuevo Despacho</span>
+      <button class="modal-close" onclick="closeDespachoModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="dspId"/>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr">
+        <div class="form-group">
+          <label class="form-label">Fecha</label>
+          <input type="date" id="dspFecha" class="form-control"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">N° Contenedor</label>
+          <input type="text" id="dspContenedor" class="form-control" placeholder="XXXX0000000"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">N° Booking</label>
+          <input type="text" id="dspBooking" class="form-control"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Exportador</label>
+          <input type="text" id="dspExportador" class="form-control" list="dspExportadoresList" autocomplete="off"/>
+          <datalist id="dspExportadoresList"></datalist>
+        </div>
+      </div>
+
+      <hr style="margin:.8rem 0;border:none;border-top:1px solid var(--border)"/>
+      <div style="font-weight:700;font-size:.85rem;color:var(--green-d);margin-bottom:.6rem">⏱ Tiempos</div>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr">
+        <div class="form-group">
+          <label class="form-label">Hora Programada</label>
+          <input type="time" id="dspHoraProgramada" class="form-control"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hora Entrega de Carga</label>
+          <input type="time" id="dspHoraEntregaCarga" class="form-control"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hora Inicio Revisión Calidad</label>
+          <input type="time" id="dspHoraInicioRevCalidad" class="form-control"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hora Inicio Corrección</label>
+          <input type="time" id="dspHoraInicioCorreccion" class="form-control" oninput="calcDespachoTiempos()"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hora Fin Corrección</label>
+          <input type="time" id="dspHoraFinCorreccion" class="form-control" oninput="calcDespachoTiempos()"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="color:var(--muted)">Tiempo Corrección (calc.)</label>
+          <div id="dspTiempoCorreccionCalc" style="padding:.5rem;background:#f5f5f5;border-radius:6px;font-size:.9rem;color:var(--green-d);font-weight:700">—</div>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Áreas Involucradas</label>
+          <input type="text" id="dspAreas" class="form-control" placeholder="Ej: Calidad, Producción, Logística"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hora Entrega Anexo</label>
+          <input type="time" id="dspHoraEntregaAnexo" class="form-control"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hora Validación Anexo</label>
+          <input type="time" id="dspHoraValidacionAnexo" class="form-control"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hora Inicio Revisión SENASA</label>
+          <input type="time" id="dspHoraInicioSenasa" class="form-control" oninput="calcDespachoTiempos()"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hora Fin Revisión SENASA</label>
+          <input type="time" id="dspHoraFinSenasa" class="form-control" oninput="calcDespachoTiempos()"/>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label" style="color:var(--muted)">Tiempo SENASA (calc.)</label>
+          <div id="dspTiempoSenasaCalc" style="padding:.5rem;background:#f5f5f5;border-radius:6px;font-size:.9rem;color:#1565c0;font-weight:700">—</div>
+        </div>
+      </div>
+
+      <hr style="margin:.8rem 0;border:none;border-top:1px solid var(--border)"/>
+      <div class="form-group">
+        <label class="form-label">Observaciones</label>
+        <textarea id="dspObservaciones" class="form-control" rows="3" placeholder="Observaciones del despacho…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeDespachoModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveDespacho()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ── CONFIG ─────────────────────────────────────────
+// ⚠️ Reemplaza esta URL por la de tu Google Apps Script desplegado como Web App
+const API_URL = "https://script.google.com/macros/s/AKfycbz0pwJzKhCgTCvoGtV1b7e8lM7igxwzfwyB3UD1ZII7KJvo1K8nga3PhCHEcP_tCuk/exec";
+
+// ── SESSION ─────────────────────────────────────────
+let session = null;
+let allGuias = [];
+
+function saveSession(data) {
+  session = data;
+  sessionStorage.setItem("calidad_session", JSON.stringify(data));
+}
+function loadSession() {
+  try {
+    const s = sessionStorage.getItem("calidad_session");
+    if (s) session = JSON.parse(s);
+  } catch(_) {}
+}
+function clearSession() {
+  session = null;
+  sessionStorage.removeItem("calidad_session");
+}
+
+// ── API ─────────────────────────────────────────────
+async function api(action, body = {}) {
+  const payload = { action, ...body };
+  if (session?.token) payload.token = session.token;
+
+  const res = await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || "Error desconocido");
+  return json;
+}
+
+// ── LOGIN ────────────────────────────────────────────
+async function doLogin() {
+  const usuario  = document.getElementById("loginUser").value.trim();
+  const password = document.getElementById("loginPass").value;
+  const errEl    = document.getElementById("loginError");
+  errEl.style.display = "none";
+
+  if (!usuario || !password) {
+    errEl.textContent = "Ingresa usuario y contraseña.";
+    errEl.style.display = "block";
+    return;
+  }
+
+  try {
+    const data = await api("login", { usuario, password });
+    saveSession(data);
+    showApp();
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.style.display = "block";
+  }
+}
+
+// Enter en campos de login
+["loginUser","loginPass"].forEach(id =>
+  document.getElementById(id).addEventListener("keydown", e => { if(e.key==="Enter") doLogin(); })
+);
+
+function logout() {
+  clearSession();
+  document.getElementById("appPage").style.display = "none";
+  document.getElementById("loginPage").style.display = "flex";
+}
+
+// ── APP INIT ─────────────────────────────────────────
+function applyAccessControl() {
+  if (!session) return;
+  const accesos = (session.accesos || "all").trim().toLowerCase();
+  if (accesos === "all") return; // sin restricciones
+
+  const modulos = accesos.split(",").map(s => s.trim()).filter(Boolean);
+
+  // Mapa: módulo → id del item en sidebar
+  const navMap = {
+    guias:       "nav-guias",
+    eval:        "nav-eval",
+    fuc:         "nav-fuc",
+    productores: "nav-productores",
+    defectos:    "nav-defectos",
+    calibres:    "nav-calibres",
+    usuarios:    "nav-usuarios",
+    despachos:   "nav-despachos",
+  };
+
+  Object.entries(navMap).forEach(([mod, navId]) => {
+    const el = document.getElementById(navId);
+    if (!el) return;
+    el.style.display = modulos.includes(mod) ? "" : "none";
+  });
+
+  // Si 'guias' no tiene acceso, mostrar el primer módulo permitido
+  if (!modulos.includes("guias")) {
+    const first = modulos[0];
+    if (first && navMap[first]) {
+      const el = document.getElementById(navMap[first]);
+      if (el) el.click();
+    }
+  }
+}
+
+function showApp() {
+  document.getElementById("loginPage").style.display  = "none";
+  document.getElementById("appPage").style.display    = "flex";
+  document.getElementById("navNombre").textContent    = session.nombre;
+  document.getElementById("navRol").textContent       = session.rol?.toUpperCase();
+  applyAccessControl();
+  showSection("guias", document.getElementById("nav-guias"));
+  // Precargar productores en segundo plano para el autocompletado de CLP en Guías
+  api("getProductores").then(r => {
+    allProductores = r.data || [];
+    populateCLPDatalist();
+  }).catch(() => {});
+}
+
+window.addEventListener("load", () => {
+  loadSession();
+  if (session?.token) showApp();
+});
+
+// ── GUÍAS – CARGA ────────────────────────────────────
+async function loadGuias() {
+  document.getElementById("tableContainer").innerHTML =
+    '<div class="loader"><div class="spinner"></div><p style="margin-top:.5rem">Cargando…</p></div>';
+  try {
+    const res = await api("getGuias");
+    allGuias  = res.data || [];
+    // asegurar que productores estén cargados para el autofill
+    if (!allProductores.length) await loadProductores();
+    populateFilters();
+    filterGuias();
+  } catch(e) {
+    document.getElementById("tableContainer").innerHTML =
+      `<p style="color:var(--red);padding:1rem">Error: ${e.message}</p>`;
+    if (e.message.includes("expirad") || e.message.includes("nválido")) logout();
+  }
+}
+
+/* helpers de fecha */
+function fmtDate(v) {
+  if (!v) return "";
+  const m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : String(v);
+}
+
+/* ── Multi-select dropdown ───────────────────────── */
+function toggleMs(id) {
+  document.querySelectorAll(".ms-dropdown.open").forEach(d => { if(d.id !== id) d.classList.remove("open"); });
+  document.getElementById(id).classList.toggle("open");
+}
+document.addEventListener("click", e => {
+  if (!e.target.closest(".ms-wrap")) {
+    document.querySelectorAll(".ms-dropdown.open").forEach(d => d.classList.remove("open"));
+  }
+});
+
+function buildMsOptions(containerId, values, onChange) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const current = getMsSelected(containerId);
+  container.innerHTML = values.map(v => `
+    <label class="ms-option">
+      <input type="checkbox" value="${v}" ${current.includes(v)?"checked":""} onchange="${onChange}">
+      ${v}
+    </label>`).join("");
+}
+
+function getMsSelected(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return [];
+  return [...container.querySelectorAll("input:checked")].map(i => i.value);
+}
+
+function updateMsBtn(btnId, selected, allLabel) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.innerHTML = selected.length === 0
+    ? `${allLabel} <span>▾</span>`
+    : `${selected.length} selec. <span>▾</span>`;
+}
+
+function populateFilters() {
+  const variedades = [...new Set(allGuias.map(g => g.VARIEDAD).filter(Boolean))].sort();
+  const guias      = [...new Set(allGuias.map(g => g.N_GUIA).filter(Boolean))].sort();
+  buildMsOptions("msVariedad", variedades, "updateMsBtn('btnVariedad',getMsSelected('msVariedad'),'Todas');filterGuias()");
+  buildMsOptions("msGuia",     guias,      "updateMsBtn('btnGuia',getMsSelected('msGuia'),'Todas');filterGuias()");
+}
+
+function filterGuias() {
+  const desde  = (document.getElementById("filtFechaDesde")?.value || "").trim();
+  const hasta  = (document.getElementById("filtFechaHasta")?.value || "").trim();
+  const selGuia = getMsSelected("msGuia");
+  const selVrd  = getMsSelected("msVariedad");
+
+  const filtered = allGuias.filter(g => {
+    const fecha = String(g.FECHA_INGRESO || "").substring(0, 10);
+    if (desde && fecha < desde) return false;
+    if (hasta && fecha > hasta) return false;
+    if (selGuia.length && !selGuia.includes(String(g.N_GUIA || "").trim())) return false;
+    if (selVrd.length  && !selVrd.includes(String(g.VARIEDAD || "").trim()))  return false;
+    return true;
+  });
+  renderTable(filtered);
+}
+
+function clearFiltersGuias() {
+  ["filtFechaDesde","filtFechaHasta"].forEach(id => { const el=document.getElementById(id); if(el) el.value=""; });
+  ["msGuia","msVariedad"].forEach(id => {
+    document.querySelectorAll(`#${id} input[type=checkbox]`).forEach(c => c.checked = false);
+  });
+  updateMsBtn("btnGuia",[],"Todas");
+  updateMsBtn("btnVariedad",[],"Todas");
+  renderTable(allGuias);
+}
+
+/* ── Sidebar Base de Datos toggle ───────────────── */
+function toggleBaseDatos() {
+  const sec = document.getElementById("secToggleBaseDatos");
+  const nav = document.getElementById("subnavBaseDatos");
+  sec.classList.toggle("open");
+  nav.classList.toggle("open");
+}
+
+function renderTable(rows) {
+  if (!rows.length) {
+    document.getElementById("tableContainer").innerHTML =
+      '<p style="padding:1.5rem;color:var(--muted);text-align:center">Sin registros.</p>';
+    return;
+  }
+
+  const cols = [
+    { key:"VARIEDAD",         label:"Variedad" },
+    { key:"CLIENTE",          label:"Cliente" },
+    { key:"COD_PROD_ETIQ",    label:"Cód. Etiq." },
+    { key:"FECHA_INGRESO",    label:"F. Ingreso",  fmt: fmtDate },
+    { key:"N_GUIA",           label:"N° Guía" },
+    { key:"CLP",              label:"CLP" },
+    { key:"PRODUCTOR",        label:"Productor" },
+    { key:"LOTE",             label:"Lote" },
+    { key:"CERT_LP",          label:"Cert. CLP" },
+    { key:"MTD",              label:"MTD" },
+    { key:"MATERIA_SECA",     label:"Mat. Seca" },
+    { key:"QR_DUA",           label:"QR/DJ" },
+    { key:"VINCULACION_SISA", label:"Vinc. SIS" },
+    { key:"PCT_DIF_QUEREME",  label:"% Queresa" },
+    { key:"STATUS",           label:"Status" },
+  ];
+
+  const STATUS_CLASS = {
+    "PROCESADO":    "s-procesado",
+    "EN PISO":      "s-piso",
+    "EN PROCESO":   "s-proceso",
+    "POR DESCARGAR":"s-descargar",
+    "RECHAZADO":    "s-rechazado",
+  };
+  const QR_CLASS = { "CORREGIR QR": "s-rojo" };
+  const MS_CLASS = { "PENDIENTE": "s-rojo" };
+
+  const ths = cols.map(c => `<th>${c.label}</th>`).join("") + "<th>Acciones</th>";
+  const trs = rows.map(g => {
+    const tds = cols.map(c => {
+      const v = g[c.key] ?? "";
+      if (["CERT_LP","MTD","VINCULACION_SISA"].includes(c.key)) {
+        const cls = v === "OK" ? "ok-cell" : v ? "nok-cell" : "";
+        return `<td class="${cls}">${v}</td>`;
+      }
+      if (c.key === "QR_DUA") {
+        const sc = QR_CLASS[v];
+        if (sc) return `<td><span class="status-badge ${sc}">${v}</span></td>`;
+        const cls = v === "OK" ? "ok-cell" : v ? "nok-cell" : "";
+        return `<td class="${cls}">${v}</td>`;
+      }
+      if (c.key === "MATERIA_SECA") {
+        const sc = MS_CLASS[v];
+        if (sc) return `<td><span class="status-badge ${sc}">${v}</span></td>`;
+        const cls = v === "OK" ? "ok-cell" : v ? "nok-cell" : "";
+        return `<td class="${cls}">${v}</td>`;
+      }
+      if (c.key === "STATUS") {
+        const sc = STATUS_CLASS[v] || "s-default";
+        return `<td>${v ? `<span class="status-badge ${sc}">${v}</span>` : ""}</td>`;
+      }
+      if (c.key === "PCT_DIF_QUEREME" && v !== "") return `<td>${parseFloat(v).toFixed(2)}%</td>`;
+      if (c.fmt) return `<td>${c.fmt(v)}</td>`;
+      return `<td>${v}</td>`;
+    }).join("");
+
+    return `<tr>
+      ${tds}
+      <td>
+        <button class="btn btn-outline btn-sm" onclick='editGuia(${JSON.stringify(g)})'>✏️</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:.3rem" onclick="deleteGuia(${g._row})">🗑️</button>
+      </td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("tableContainer").innerHTML =
+    `<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+}
+
+// ── MODAL ─────────────────────────────────────────────
+function openModal() {
+  document.getElementById("modalTitle").textContent = "Nueva Guía";
+  document.getElementById("editRow").value = "";
+  clearForm();
+  document.getElementById("guiaModal").classList.add("open");
+}
+
+function closeModal() {
+  document.getElementById("guiaModal").classList.remove("open");
+}
+
+function clearForm() {
+  ["fVariedad","fCliente","fCodProdEtiq","fFechaIngreso","fNGuia","fCLP","fProductor",
+   "fLote","fCertLP","fMTD","fMateriaSeca","fQRDUA","fVinculacionSISA","fPctDif","fStatus"]
+   .forEach(id => { document.getElementById(id).value = ""; });
+}
+
+function editGuia(g) {
+  document.getElementById("modalTitle").textContent = "Editar Guía";
+  document.getElementById("editRow").value = g._row;
+
+  document.getElementById("fVariedad").value       = g.VARIEDAD        || "";
+  document.getElementById("fCliente").value        = g.CLIENTE         || "";
+  document.getElementById("fCodProdEtiq").value    = g.COD_PROD_ETIQ   || "";
+  document.getElementById("fFechaIngreso").value   = g.FECHA_INGRESO   || "";
+  document.getElementById("fNGuia").value          = g.N_GUIA          || "";
+  document.getElementById("fCLP").value            = g.CLP             || "";
+  document.getElementById("fProductor").value      = g.PRODUCTOR       || "";
+  document.getElementById("fLote").value           = g.LOTE            || "";
+  document.getElementById("fCertLP").value         = g.CERT_LP         || "";
+  document.getElementById("fMTD").value            = g.MTD             || "";
+  document.getElementById("fMateriaSeca").value    = g.MATERIA_SECA    || "";
+  document.getElementById("fQRDUA").value          = g.QR_DUA          || "";
+  document.getElementById("fVinculacionSISA").value= g.VINCULACION_SISA|| "";
+  document.getElementById("fPctDif").value         = g.PCT_DIF_QUEREME || "";
+  document.getElementById("fStatus").value         = g.STATUS          || "";
+
+  document.getElementById("guiaModal").classList.add("open");
+}
+
+// ── GUARDAR ───────────────────────────────────────────
+async function saveGuia() {
+  const btn  = document.getElementById("btnGuardar");
+  const row  = document.getElementById("editRow").value;
+
+  const guia = {
+    VARIEDAD:         document.getElementById("fVariedad").value,
+    CLIENTE:          document.getElementById("fCliente").value.trim(),
+    COD_PROD_ETIQ:    document.getElementById("fCodProdEtiq").value,
+    FECHA_INGRESO:    document.getElementById("fFechaIngreso").value,
+    N_GUIA:           document.getElementById("fNGuia").value.trim(),
+    CLP:              document.getElementById("fCLP").value.trim(),
+    PRODUCTOR:        document.getElementById("fProductor").value.trim(),
+    LOTE:             document.getElementById("fLote").value.trim(),
+    CERT_LP:          document.getElementById("fCertLP").value,
+    MTD:              document.getElementById("fMTD").value,
+    MATERIA_SECA:     document.getElementById("fMateriaSeca").value,
+    QR_DUA:           document.getElementById("fQRDUA").value,
+    VINCULACION_SISA: document.getElementById("fVinculacionSISA").value,
+    PCT_DIF_QUEREME:  document.getElementById("fPctDif").value,
+    STATUS:           document.getElementById("fStatus").value,
+  };
+
+  if (!guia.N_GUIA) { showToast("N° Guía es obligatorio.", "error"); return; }
+
+  btn.disabled = true;
+  btn.textContent = "Guardando…";
+
+  try {
+    if (row) {
+      guia._row = parseInt(row);
+      await api("updateGuia", { guia });
+      showToast("Guía actualizada.", "success");
+    } else {
+      await api("addGuia", { guia });
+      showToast("Guía registrada.", "success");
+    }
+    closeModal();
+    loadGuias();
+  } catch(e) {
+    showToast(e.message, "error");
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = "💾 Guardar";
+  }
+}
+
+// ── ELIMINAR ──────────────────────────────────────────
+async function deleteGuia(rowNum) {
+  if (!confirm("¿Eliminar esta guía?")) return;
+  try {
+    await api("deleteGuia", { row: rowNum });
+    showToast("Guía eliminada.", "success");
+    loadGuias();
+  } catch(e) {
+    showToast(e.message, "error");
+  }
+}
+
+// ── TOAST ─────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type = "") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className   = "show " + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ""; }, 3500);
+}
+
+// Cerrar modal con Escape
+document.addEventListener("keydown", e => { if(e.key==="Escape") closeModal(); });
+// Cerrar modal al clickear overlay
+document.getElementById("guiaModal").addEventListener("click", function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ── SECCIÓN NAVIGATION ────────────────────────────────
+function showSection(sec, el) {
+  document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
+  if (el) el.classList.add("active");
+  const sections = ["guias","fuc","eval","productores","defectos","calibres","usuarios","despachos"];
+  sections.forEach(s => {
+    const el2 = document.getElementById("sec" + s.charAt(0).toUpperCase() + s.slice(1));
+    if (el2) el2.style.display = sec === s ? "block" : "none";
+  });
+  if (sec === "guias")       loadGuias();
+  if (sec === "fuc")         loadFUCs();
+  if (sec === "eval")        loadEvalModule();
+  if (sec === "productores") loadProductores();
+  if (sec === "defectos")    loadDefectosCatalog();
+  if (sec === "calibres")    loadCalibres();
+  if (sec === "usuarios")    loadUsuarios();
+  if (sec === "despachos")   loadDespachos();
+  closeSidebar(); // cierra el drawer en móvil al navegar
+}
+
+// ── SIDEBAR MÓVIL ─────────────────────────────────────
+function toggleSidebar() {
+  const sb = document.querySelector(".sidebar");
+  const ov = document.getElementById("sidebarOverlay");
+  if (!sb) return;
+  sb.classList.toggle("open");
+  ov.classList.toggle("visible");
+}
+function closeSidebar() {
+  const sb = document.querySelector(".sidebar");
+  const ov = document.getElementById("sidebarOverlay");
+  if (sb) sb.classList.remove("open");
+  if (ov) ov.classList.remove("visible");
+}
+
+// ── COL_MAP – mapeo de cabeceras normalizadas ──────────
+const COL_MAP = {
+  "ID":                          "id",
+  "CERTIFICADO ORGANICO":        "certificado_organico",
+  "CERTIFICADO":                 "certificado_organico",
+  "CODIGO LUGAR PRODUCCION":     "codigo_lugar_produccion",
+  "CODIGO LUGAR DE PRODUCCION":  "codigo_lugar_produccion",
+  "CLP":                         "codigo_lugar_produccion",
+  "DEPARTAMENTO":                "departamento",
+  "EMPRESA CERTIFICADORA":       "empresa_certificadora",
+  "CERTIFICADORA":               "empresa_certificadora",
+  "EXPORTADOR":                  "exportador",
+  "FECHA INGRESO":               "fecha_ingreso",
+  "FECHA DE INGRESO":            "fecha_ingreso",
+  "FECHA PROCESO":               "fecha_proceso",
+  "FECHA DE PROCESO":            "fecha_proceso",
+  "FIN DESCARGA":                "fin_descarga",
+  "GGN":                         "ggn",
+  "GUIA INGRESO":                "guia_ingreso",
+  "GUIA DE INGRESO":             "guia_ingreso",
+  "N GUIA":                      "guia_ingreso",
+  "N° GUIA":                     "guia_ingreso",
+  "GUIA INGRESO LOCAL":          "guia_ingreso_local",
+  "INGRESO GARITA":              "ingreso_garita",
+  "INICIO DESCARGA":             "inicio_descarga",
+  "LINEA EMPAQUE":               "linea_empaque",
+  "LINEA DE EMPAQUE":            "linea_empaque",
+  "LOTE":                        "lote",
+  "MARCA":                       "marca",
+  "NUM FUC":                     "num_fuc",
+  "N FUC":                       "num_fuc",
+  "N° FUC":                      "num_fuc",
+  "NUMERO FUC":                  "num_fuc",
+  "FUC":                         "num_fuc",
+  "NUM PERSONAS":                "num_personas",
+  "N PERSONAS":                  "num_personas",
+  "N° PERSONAS":                 "num_personas",
+  "NUMERO DE PERSONAS":          "num_personas",
+  "PEP":                         "pep",
+  "PRODUCTO":                    "producto",
+  "PRODUCTOR":                   "productor",
+  "TIPO CAJA":                   "tipo_caja",
+  "TRAZABILIDAD":                "trazabilidad",
+  "VARIEDAD":                    "variedad",
+  "TOTAL JABAS":                 "total_jabas",
+  "KG ENTREGADOS":               "kg_entregados",
+  "KG EXPORTADOS":               "kg_exportados",
+  "ESTADO":                      "estado",
+};
+
+const DATE_FIELDS = ["fecha_ingreso","fecha_proceso","ingreso_garita","inicio_descarga","fin_descarga"];
+
+// Normalizar cabecera: UPPERCASE → sin acentos → sin °/º → colapsar espacios
+function normalizeHeader(h) {
+  return String(h)
+    .toUpperCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")  // quitar acentos
+    .replace(/[°º]/g, "")                               // quitar grados
+    .replace(/\s+/g, " ")                               // colapsar espacios
+    .trim();
+}
+
+// Convertir valor de fecha a YYYY-MM-DD
+function toDateStr(val) {
+  if (!val && val !== 0) return "";
+  // Serial de Excel (número)
+  if (typeof val === "number") {
+    const d = new Date((val - 25569) * 86400000);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString().slice(0, 10);
+  }
+  // Ya es Date (SheetJS puede devolverlo así)
+  if (val instanceof Date) {
+    if (isNaN(val.getTime())) return "";
+    return val.toISOString().slice(0, 10);
+  }
+  // String – intentar parsear
+  const s = String(val).trim();
+  if (!s) return "";
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+  return s;
+}
+
+// Parsear Excel con SheetJS
+function parseExcel(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb    = XLSX.read(e.target.result, { type: "array", cellDates: false });
+        const ws    = wb.Sheets[wb.SheetNames[0]];
+        const raw   = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+
+        // Buscar fila de cabeceras en las primeras 15 filas
+        let headerRowIdx = -1;
+        for (let i = 0; i < Math.min(15, raw.length); i++) {
+          const norm = raw[i].map(normalizeHeader);
+          if (norm.some(h => h === "FUC" || h === "PRODUCTOR" || h === "EXPORTADOR")) {
+            headerRowIdx = i;
+            break;
+          }
+        }
+        if (headerRowIdx === -1) {
+          return reject(new Error("No se encontró fila de cabeceras con FUC, PRODUCTOR o EXPORTADOR en las primeras 15 filas."));
+        }
+
+        const rawHeaders = raw[headerRowIdx];
+        const normHeaders = rawHeaders.map(normalizeHeader);
+
+        // Construir filas mapeadas
+        const rows = [];
+        for (let i = headerRowIdx + 1; i < raw.length; i++) {
+          const cells = raw[i];
+          const obj   = {};
+          normHeaders.forEach((nh, j) => {
+            const internalKey = COL_MAP[nh];
+            if (!internalKey) return;
+            let val = cells[j];
+            if (DATE_FIELDS.includes(internalKey)) val = toDateStr(val);
+            obj[internalKey] = val !== undefined ? val : "";
+          });
+          // Solo filas con num_fuc
+          if (obj["num_fuc"] !== undefined && String(obj["num_fuc"]).trim() !== "") {
+            rows.push(obj);
+          }
+        }
+
+        resolve(rows);
+      } catch(err) {
+        reject(err);
+      }
+    };
+    reader.onerror = () => reject(new Error("Error al leer el archivo."));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// ── DRAG & DROP ───────────────────────────────────────
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById("uploadZone").classList.remove("drag");
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+
+async function handleFile(file) {
+  if (!file) return;
+  const resultDiv  = document.getElementById("uploadResult");
+  const msgEl      = document.getElementById("uploadMsg");
+  const chipsEl    = document.getElementById("resultChips");
+
+  resultDiv.style.display = "none";
+  msgEl.textContent       = "";
+  chipsEl.innerHTML       = "";
+
+  try {
+    msgEl.textContent       = "⏳ Leyendo Excel…";
+    resultDiv.style.display = "block";
+
+    const rows = await parseExcel(file);
+    if (rows.length === 0) {
+      msgEl.style.color = "var(--red)";
+      msgEl.textContent = "❌ No se encontraron filas con num_fuc válido.";
+      return;
+    }
+
+    msgEl.style.color = "var(--muted)";
+    msgEl.textContent = `⏳ Enviando ${rows.length} filas al servidor…`;
+
+    const res = await api("uploadFUC", { rows });
+
+    msgEl.style.color = "var(--green)";
+    msgEl.textContent = "✅ " + res.message;
+    chipsEl.innerHTML = `
+      <span class="chip chip-added">➕ ${res.added} nuevas</span>
+      <span class="chip chip-updated">✏️ ${res.updated} actualizadas</span>
+      <span class="chip chip-skipped">⏭ ${res.skipped} sin cambios</span>
+      <span class="chip chip-total">📊 ${res.total} total</span>
+    `;
+
+    loadFUCs();
+  } catch(err) {
+    resultDiv.style.display = "block";
+    msgEl.style.color       = "var(--red)";
+    msgEl.textContent       = "❌ " + err.message;
+  }
+
+  // Limpiar input para permitir cargar mismo archivo de nuevo
+  document.getElementById("fileInput").value = "";
+}
+
+// ── FUC TABLE ─────────────────────────────────────────
+let allFUCs = [];
+
+async function loadFUCs() {
+  document.getElementById("fucTableContainer").innerHTML =
+    '<div class="loader"><div class="spinner"></div><p style="margin-top:.5rem">Cargando…</p></div>';
+  try {
+    const res = await api("getFUCs");
+    allFUCs   = res.data || [];
+    renderFUCTable(allFUCs);
+  } catch(e) {
+    document.getElementById("fucTableContainer").innerHTML =
+      `<p style="color:var(--red);padding:1rem">Error: ${e.message}</p>`;
+    if (e.message.includes("expirad") || e.message.includes("nválido")) logout();
+  }
+}
+
+function filterFUCTable() {
+  const q = document.getElementById("searchFUC").value.toLowerCase();
+  const filtered = allFUCs.filter(r =>
+    Object.values(r).some(v => String(v).toLowerCase().includes(q))
+  );
+  renderFUCTable(filtered);
+}
+
+function renderFUCTable(rows) {
+  if (!rows.length) {
+    document.getElementById("fucTableContainer").innerHTML =
+      '<p style="padding:1.5rem;color:var(--muted);text-align:center">Sin registros.</p>';
+    return;
+  }
+
+  const cols = [
+    { key:"num_fuc",               label:"N° FUC" },
+    { key:"exportador",            label:"Exportador" },
+    { key:"productor",             label:"Productor" },
+    { key:"lote",                  label:"Lote" },
+    { key:"variedad",              label:"Variedad" },
+    { key:"fecha_ingreso",         label:"F. Ingreso" },
+    { key:"fecha_proceso",         label:"F. Proceso" },
+    { key:"guia_ingreso",          label:"Guía Ingreso" },
+    { key:"total_jabas",           label:"Total Jabas" },
+    { key:"kg_entregados",         label:"Kg Entregados" },
+    { key:"kg_exportados",         label:"Kg Exportados" },
+    { key:"codigo_lugar_produccion",label:"CLP" },
+    { key:"linea_empaque",         label:"Línea" },
+    { key:"estado",                label:"Estado" },
+  ];
+
+  const ths = cols.map(c => `<th>${c.label}</th>`).join("") + "<th>Acc.</th>";
+  const trs = rows.map(g => {
+    const tds = cols.map(c => {
+      const v = g[c.key] ?? "";
+      if (c.key === "estado") {
+        const sc = v === "Programado" ? "s-procesado" : v === "No programado" ? "s-piso" : "s-default";
+        return `<td><span class="status-badge ${sc}">${v}</span></td>`;
+      }
+      return `<td>${v}</td>`;
+    }).join("");
+    return `<tr>${tds}<td>
+      <button class="btn btn-danger btn-sm" onclick="deleteFUCRow(${g._row})">🗑️</button>
+    </td></tr>`;
+  }).join("");
+
+  document.getElementById("fucTableContainer").innerHTML =
+    `<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+}
+
+async function deleteFUCRow(rowNum) {
+  if (!confirm("¿Eliminar esta FUC?")) return;
+  try {
+    await api("deleteFUC", { row: rowNum });
+    showToast("FUC eliminada.", "success");
+    loadFUCs();
+  } catch(e) {
+    showToast(e.message, "error");
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MÓDULO EVALUACIONES PT
+// ══════════════════════════════════════════════════════════════
+
+// ── Lista de defectos (dinámica desde BD_DEFECTOS) ───────────
+let DEFECTOS_LIST = [];   // se llena según cultivo del FUC activo
+
+async function loadDefectosForEval(cultivo) {
+  try {
+    const params = cultivo ? { cultivo } : {};
+    const res    = await api("getDefectos", params);
+    DEFECTOS_LIST = (res.data || []).map(d => d.defecto).filter(Boolean);
+    // Actualizar también allDefectosCat para los selects de líneas
+    allDefectosCat = res.data || [];
+  } catch(_) {
+    DEFECTOS_LIST = [];
+  }
+}
+
+let selectedDefectos = new Set();
+let currentFUC       = null;   // objeto FUC activo
+let evalEditMode     = false;
+
+// (Funciones de dropdown de defectos eliminadas — los defectos
+//  ahora se seleccionan directamente en cada fila de la tabla de líneas)
+function initDefectosDropdown() { /* no-op */ }
+function setDefectosFromStr() { /* no-op */ }
+
+// ── FUC datalist (autocompletar) ──────────────────────────────
+function populateFucDatalist() {
+  const dl = document.getElementById("fucDatalist");
+  dl.innerHTML = allFUCs.map(f => `<option value="${f.num_fuc}"></option>`).join("");
+}
+
+// ── Cargar módulo completo: FUCs + evaluaciones → split ────────
+let allEvalData = [];   // todas las evaluaciones (planas)
+
+async function loadEvalModule() {
+  // Limpiar selección actual
+  clearEvalModule(false);
+
+  // Mostrar spinners
+  document.getElementById("fucPendientesTable").innerHTML =
+    '<div class="loader"><div class="spinner"></div></div>';
+  document.getElementById("fucEvaluadosTable").innerHTML =
+    '<div class="loader"><div class="spinner"></div></div>';
+
+  try {
+    const [fucRes, evRes] = await Promise.all([
+      api("getFUCs"),
+      api("getEvaluaciones")
+    ]);
+    allFUCs    = fucRes.data || [];
+    allEvalData= evRes.data  || [];
+
+    populateFucDatalist();
+
+    // FUCs que ya tienen al menos 1 evaluación
+    const conEval = new Set(
+      allEvalData.map(e => String(e.num_fuc || "").trim()).filter(Boolean)
+    );
+
+    const pendientes = allFUCs.filter(f => !conEval.has(String(f.num_fuc).trim()));
+    const evaluados  = allFUCs.filter(f =>  conEval.has(String(f.num_fuc).trim()));
+
+    // Contadores
+    document.getElementById("pendienteCount").textContent = `(${pendientes.length})`;
+    document.getElementById("evaluadoCount").textContent  = `(${evaluados.length})`;
+
+    // Resetear búsqueda de evaluados
+    const searchEl = document.getElementById("evalSearchInput");
+    if (searchEl) searchEl.value = "";
+
+    // Renderizar
+    renderFUCList("fucPendientesTable", pendientes, false);
+    renderFUCList("fucEvaluadosTable",  evaluados,  true);
+  } catch(e) {
+    const msg = `<p style="color:var(--red);padding:.8rem">Error: ${e.message}</p>`;
+    document.getElementById("fucPendientesTable").innerHTML = msg;
+    document.getElementById("fucEvaluadosTable").innerHTML  = msg;
+  }
+}
+
+function countEvalsFor(numFuc) {
+  return allEvalData.filter(e => String(e.num_fuc || "").trim() === String(numFuc).trim()).length;
+}
+
+// Datos evaluados para filtrado
+let evaluadosFUCs = [];
+
+function renderFUCList(containerId, fucs, showCount) {
+  if (containerId === "fucPendientesTable") {
+    // Pendientes → poblar SELECT
+    const sel = document.getElementById("pendienteSelect");
+    sel.innerHTML = '<option value="">— Selecciona un FUC para evaluar —</option>' +
+      fucs.map(f => {
+        const label = [f.num_fuc, f.producto, f.variedad, f.exportador]
+          .filter(Boolean).join("  |  ");
+        return `<option value="${f.num_fuc}">${label}</option>`;
+      }).join("");
+
+    // Mostrar mensaje si no hay pendientes
+    const el = document.getElementById(containerId);
+    el.style.display = fucs.length ? "none" : "block";
+    if (!fucs.length) el.innerHTML =
+      '<p style="padding:.5rem .2rem;color:var(--muted);font-size:.85rem">✅ Todos los FUCs han sido evaluados.</p>';
+    return;
+  }
+
+  // Evaluados → tabla filtrable
+  evaluadosFUCs = fucs;
+  renderEvaluadosTable(fucs);
+}
+
+// Obtiene la fecha más reciente de evaluación para un FUC
+function latestEvalDate(numFuc) {
+  const evals = allEvalData.filter(e => String(e.num_fuc || "").trim() === String(numFuc).trim());
+  if (!evals.length) return "";
+  const dates = evals.map(e => (e.created_at || "").slice(0, 10)).filter(Boolean).sort();
+  return dates[dates.length - 1] || "";
+}
+
+function renderEvaluadosTable(fucs) {
+  const el = document.getElementById("fucEvaluadosTable");
+  if (!fucs.length) {
+    el.innerHTML = '<p style="padding:.5rem .2rem;color:var(--muted);font-size:.85rem">Sin resultados para el filtro seleccionado.</p>';
+    return;
+  }
+  const trs = fucs.map(f => {
+    const count    = countEvalsFor(f.num_fuc);
+    const lastDate = latestEvalDate(f.num_fuc);
+    const dateFmt  = lastDate ? lastDate.split("-").reverse().join("-") : "—";
+    return `<tr class="fuc-list-row" id="fuc-row-${f.num_fuc}" onclick="selectFUC('${f.num_fuc}')">
+      <td style="font-weight:600">${f.num_fuc || "—"}</td>
+      <td>${f.producto   || "—"}</td>
+      <td>${f.variedad   || "—"}</td>
+      <td>${f.exportador || "—"}</td>
+      <td style="text-align:center;white-space:nowrap;color:var(--muted);font-size:.8rem">${dateFmt}</td>
+      <td style="text-align:center"><span class="eval-count">${count}</span></td>
+    </tr>`;
+  }).join("");
+
+  el.innerHTML = `<div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>N° FUC</th><th>Cultivo</th><th>Variedad</th>
+        <th>Exportador / Cliente</th>
+        <th style="width:95px;text-align:center">Última Eval.</th>
+        <th style="width:70px;text-align:center">Evals.</th>
+      </tr></thead>
+      <tbody>${trs}</tbody>
+    </table>
+  </div>`;
+}
+
+function filterEvaluadosTable() {
+  const q     = (document.getElementById("evalSearchInput")?.value || "").toLowerCase();
+  const desde = (document.getElementById("evalFechaDesde")?.value || "").trim();
+  const hasta = (document.getElementById("evalFechaHasta")?.value || "").trim();
+
+  let filtered = evaluadosFUCs;
+
+  if (q) {
+    filtered = filtered.filter(f =>
+      [f.num_fuc, f.producto, f.variedad, f.exportador]
+        .some(v => String(v || "").toLowerCase().includes(q))
+    );
+  }
+
+  if (desde || hasta) {
+    filtered = filtered.filter(f => {
+      // Mostrar si tiene al menos 1 evaluación dentro del rango
+      const evals = allEvalData.filter(e => String(e.num_fuc || "").trim() === String(f.num_fuc).trim());
+      return evals.some(e => {
+        const d = (e.created_at || "").slice(0, 10);
+        if (!d) return false;
+        if (desde && d < desde) return false;
+        if (hasta && d > hasta) return false;
+        return true;
+      });
+    });
+  }
+
+  renderEvaluadosTable(filtered);
+}
+
+function clearEvalFiltros() {
+  const si = document.getElementById("evalSearchInput");
+  const fd = document.getElementById("evalFechaDesde");
+  const fh = document.getElementById("evalFechaHasta");
+  if (si) si.value = "";
+  if (fd) fd.value = "";
+  if (fh) fh.value = "";
+  renderEvaluadosTable(evaluadosFUCs);
+}
+
+function evaluarSeleccionado() {
+  const numFuc = document.getElementById("pendienteSelect").value;
+  if (!numFuc) { showToast("Selecciona un FUC de la lista.", "error"); return; }
+  selectFUC(numFuc);
+}
+
+function selectFUC(numFuc) {
+  const fuc = allFUCs.find(f => String(f.num_fuc).trim() === String(numFuc).trim());
+  if (!fuc) return;
+
+  // Resaltar fila activa
+  document.querySelectorAll(".fuc-list-row").forEach(r => r.classList.remove("active"));
+  const row = document.getElementById(`fuc-row-${numFuc}`);
+  if (row) row.classList.add("active");
+
+  currentFUC = fuc;
+  showFUCInfo(fuc);
+  loadEvaluaciones(fuc.num_fuc);
+
+  // Scroll hacia el detalle
+  setTimeout(() => {
+    document.getElementById("fucInfoCard").scrollIntoView({ behavior:"smooth", block:"start" });
+  }, 80);
+}
+
+async function buscarFUC() {
+  const num = document.getElementById("evalFucInput").value.trim();
+  if (!num) return;
+
+  let fuc = allFUCs.find(f => String(f.num_fuc).trim() === num);
+  if (!fuc) {
+    try {
+      const res = await api("getFUCs");
+      allFUCs   = res.data || [];
+      populateFucDatalist();
+      fuc = allFUCs.find(f => String(f.num_fuc).trim() === num);
+    } catch(e) { showToast(e.message, "error"); return; }
+  }
+  if (!fuc) { showToast(`FUC "${num}" no encontrado en BD_FUC.`, "error"); return; }
+  selectFUC(fuc.num_fuc);
+}
+
+async function showFUCInfo(fuc) {
+  document.getElementById("infoFUC").textContent        = fuc.num_fuc        || "—";
+  document.getElementById("infoExportador").textContent = fuc.exportador      || "—";
+  document.getElementById("infoProductor").textContent  = fuc.productor       || "—";
+  document.getElementById("infoLote").textContent       = fuc.lote            || "—";
+  document.getElementById("infoGuia").textContent       = fuc.guia_ingreso    || "—";
+  document.getElementById("infoCultivo").textContent    = fuc.producto        || "—";
+  document.getElementById("infoVariedad").textContent   = fuc.variedad        || "—";
+  document.getElementById("fucInfoCard").classList.add("show");
+  document.getElementById("evalHistPanel").style.display = "block";
+  // Ocultar formulario — solo aparece cuando el usuario pulsa "Nueva Evaluación"
+  document.getElementById("evalFormPanel").style.display = "none";
+  // Pre-cargar defectos y calibres en background para que estén listos al abrir el form
+  await Promise.all([
+    loadDefectosForEval(fuc.producto || ""),
+    allCalibres.length ? Promise.resolve() : loadCalibres()
+  ]);
+}
+
+function clearEvalModule(resetInput = true) {
+  currentFUC = null;
+  const fucInp = document.getElementById("evalFucInput");
+  if (resetInput && fucInp) fucInp.value = "";
+  document.getElementById("fucInfoCard").classList.remove("show");
+  document.getElementById("evalFormPanel").style.display = "none";
+  document.getElementById("evalHistPanel").style.display = "none";
+  document.getElementById("evalCards").innerHTML = "";
+  document.querySelectorAll(".fuc-list-row").forEach(r => r.classList.remove("active"));
+  clearEvalForm();
+}
+
+// ── Formulario ────────────────────────────────────────────────
+async function newEval() {
+  evalEditMode = false;
+  document.getElementById("evalFormTitle").textContent = "➕ Nueva Evaluación";
+  document.getElementById("evalEditRow").value = "";
+  document.getElementById("evalEditId").value  = "";
+  // Pre-cargar calibres y defectos si no están en caché
+  if (!allCalibres.length) await loadCalibres();
+  if (!allDefectosCat.length) await loadDefectosCatalog();
+  clearEvalForm();
+  document.getElementById("evalFormPanel").style.display = "block";
+}
+
+function clearEvalForm() {
+  document.getElementById("evalPctExportable").value  = "";
+  const f2 = document.getElementById("evalPctExportable2");
+  if (f2) f2.value = "";
+  clearEvalLineas();
+  addLineaEval(); // empieza con 1 línea vacía
+}
+
+function cancelEditEval() {
+  evalEditMode = false;
+  document.getElementById("evalFormTitle").textContent = "➕ Nueva Evaluación";
+  document.getElementById("evalEditRow").value = "";
+  document.getElementById("evalEditId").value  = "";
+  clearEvalForm();
+}
+
+function editEval(ev) {
+  evalEditMode = true;
+  document.getElementById("evalFormTitle").textContent = `✏️ Editando Evaluación #${ev.num_evaluacion}`;
+  document.getElementById("evalEditRow").value = ev._row;
+  document.getElementById("evalEditId").value  = ev.id || "";
+
+  document.getElementById("evalPctExportable").value  = ev.pct_exportable  || "";
+  const f2 = document.getElementById("evalPctExportable2");
+  if (f2) f2.value = ev.pct_exportable_2 || "";
+
+  let lineasData = [];
+  try { lineasData = typeof ev.lineas === "string" ? JSON.parse(ev.lineas) : (ev.lineas || []); } catch(_) {}
+  renderLineasForm(lineasData);
+
+  document.getElementById("evalFormPanel").style.display = "block";
+  document.getElementById("evalFormPanel").scrollIntoView({ behavior:"smooth" });
+}
+
+// ── Guardar ───────────────────────────────────────────────────
+async function saveEvaluacion() {
+  if (!currentFUC) { showToast("Selecciona un FUC primero.", "error"); return; }
+
+  const pctExp  = document.getElementById("evalPctExportable").value;
+  const pctExp2 = (document.getElementById("evalPctExportable2") || {}).value || "";
+  const lineas  = collectLineas();
+
+  const ev = {
+    num_fuc:          currentFUC.num_fuc,
+    exportador:       currentFUC.exportador    || "",
+    productor:        currentFUC.productor     || "",
+    lote:             currentFUC.lote          || "",
+    guia_ingreso:     currentFUC.guia_ingreso  || "",
+    cultivo:          currentFUC.producto      || "",
+    variedad:         currentFUC.variedad      || "",
+    pct_exportable:   pctExp,
+    pct_exportable_2: pctExp2,
+    lineas:           JSON.stringify(lineas),
+    observaciones:    "",
+  };
+
+  const rowVal = document.getElementById("evalEditRow").value;
+  if (evalEditMode && rowVal) {
+    ev._row = parseInt(rowVal);
+    ev.id   = document.getElementById("evalEditId").value;
+  }
+
+  try {
+    if (evalEditMode && rowVal) {
+      await api("updateEvaluacion", { evaluacion: ev });
+      showToast("Evaluación actualizada.", "success");
+    } else {
+      await api("addEvaluacion", { evaluacion: ev });
+      showToast("Evaluación guardada.", "success");
+    }
+    cancelEditEval();
+    const savedFUC = currentFUC;
+    await loadEvalModule();
+    selectFUC(savedFUC.num_fuc);
+  } catch(e) {
+    showToast(e.message, "error");
+  }
+}
+
+// ── Cargar historial ──────────────────────────────────────────
+async function loadEvaluaciones(numFuc) {
+  document.getElementById("evalCards").innerHTML =
+    '<div class="loader"><div class="spinner"></div></div>';
+  try {
+    const res  = await api("getEvaluaciones", { num_fuc: numFuc });
+    renderEvalCards(res.data || []);
+  } catch(e) {
+    document.getElementById("evalCards").innerHTML =
+      `<p style="color:var(--red)">Error: ${e.message}</p>`;
+  }
+}
+
+function renderDefectosRead(defectos) {
+  if (!defectos || !defectos.length) return '<span style="color:var(--muted)">—</span>';
+  return defectos.map(d =>
+    `<div style="display:flex;gap:.3rem;align-items:center;margin-bottom:.15rem">
+      ${d.pct ? `<span style="font-size:.7rem;background:#e0e0e0;border-radius:3px;padding:0 .3rem">${d.pct}%</span>` : ""}
+      <span class="defect-chip" style="font-size:.72rem">${d.def||"—"}</span>
+    </div>`
+  ).join("");
+}
+
+function buildLineasReadTable(lineasRaw) {
+  let lineas = [];
+  try { lineas = typeof lineasRaw === "string" ? JSON.parse(lineasRaw) : (lineasRaw || []); } catch(_) {}
+  if (!lineas.length) return "";
+  return lineas.map(l => {
+    const filas = (l.filas || []).map(f => {
+      const fn = normalizeFilaData(f);
+      return `
+      <tr>
+        <td style="font-weight:700">${fn.calibre||"—"}</td>
+        <td>${fn.ps_cat||"—"}</td>
+        <td style="min-width:130px">${renderDefectosRead(fn.ps_defectos)}</td>
+        <td>${fn.ss_cat||"—"}</td>
+        <td style="min-width:130px">${renderDefectosRead(fn.ss_defectos)}</td>
+      </tr>`;
+    }).join("");
+    return `
+    <div style="margin-bottom:.6rem">
+      <div style="background:var(--green-d);color:#fff;padding:.3rem .7rem;border-radius:4px 4px 0 0;font-weight:700;font-size:.82rem">📏 Línea ${l.linea}</div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:.78rem;min-width:600px">
+          <thead>
+            <tr>
+              <th rowspan="2" style="background:#f0f4f0;border:1px solid var(--border);padding:.3rem">Calibre</th>
+              <th colspan="2" style="background:#e8f5e9;color:#2e7d32;border:1px solid var(--border);padding:.3rem">Desviación de CAT</th>
+              <th colspan="2" style="background:#e3f2fd;color:#1565c0;border:1px solid var(--border);padding:.3rem">Descarte</th>
+            </tr>
+            <tr>
+              <th style="background:#e8f5e9;border:1px solid var(--border);padding:.2rem;color:#2e7d32">CAT</th>
+              <th style="background:#e8f5e9;border:1px solid var(--border);padding:.2rem;color:#2e7d32">%-Defecto</th>
+              <th style="background:#e3f2fd;border:1px solid var(--border);padding:.2rem;color:#1565c0">CAT</th>
+              <th style="background:#e3f2fd;border:1px solid var(--border);padding:.2rem;color:#1565c0">%-Defecto</th>
+            </tr>
+          </thead>
+          <tbody>${filas}</tbody>
+        </table>
+      </div>
+      ${l.observaciones ? `<div style="padding:.4rem .7rem;font-size:.82rem;color:var(--muted);background:#fafafa;border:1px solid var(--border);border-top:none;border-radius:0 0 4px 4px;font-style:italic">💬 ${l.observaciones}</div>` : ""}
+    </div>`;
+  }).join("");
+}
+
+function renderEvalCards(rows) {
+  if (!rows.length) {
+    document.getElementById("evalCards").innerHTML =
+      '<p style="color:var(--muted);padding:.5rem">Sin evaluaciones registradas. Usa el formulario de arriba.</p>';
+    return;
+  }
+
+  rows.sort((a,b) => (parseInt(a.num_evaluacion)||0) - (parseInt(b.num_evaluacion)||0));
+
+  document.getElementById("evalCards").innerHTML = rows.map(ev => {
+    const pctExpColor = ev.pct_exportable !== "" && ev.pct_exportable !== undefined
+      ? (parseFloat(ev.pct_exportable) < 3 ? "var(--green)" : "var(--red)") : "inherit";
+    const pctExp2Color = ev.pct_exportable_2 !== "" && ev.pct_exportable_2 !== undefined
+      ? (parseFloat(ev.pct_exportable_2) < 3 ? "var(--green)" : "var(--red)") : "inherit";
+    const pctDefColor = ev.pct_defectos
+      ? (parseFloat(ev.pct_defectos) <= 5 ? "var(--green)" : "var(--red)") : "inherit";
+
+    const lineasTable = buildLineasReadTable(ev.lineas);
+
+    return `
+    <div class="eval-card">
+      <div class="eval-card-header">
+        <span class="eval-badge">Evaluación #${ev.num_evaluacion || "—"}</span>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn btn-outline btn-sm" onclick='editEval(${JSON.stringify(ev).replace(/'/g,"&#39;")})'>✏️ Editar</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteEval(${ev._row})">🗑️</button>
+        </div>
+      </div>
+      <div class="eval-grid">
+        <div class="eval-field">
+          <label>% Export. Sal. Máq. 1</label>
+          <span style="font-size:1.15rem;font-weight:700;color:${pctExpColor}">
+            ${ev.pct_exportable !== "" && ev.pct_exportable !== undefined ? parseFloat(ev.pct_exportable).toFixed(1)+"%" : "—"}
+          </span>
+        </div>
+        <div class="eval-field">
+          <label>% Export. Sal. Máq. 2</label>
+          <span style="font-size:1.15rem;font-weight:700;color:${pctExp2Color}">
+            ${ev.pct_exportable_2 !== "" && ev.pct_exportable_2 !== undefined ? parseFloat(ev.pct_exportable_2).toFixed(1)+"%" : "—"}
+          </span>
+        </div>
+        <div class="eval-field">
+          <label>% Defectos PT</label>
+          <span style="font-size:1.15rem;font-weight:700;color:${pctDefColor}">
+            ${ev.pct_defectos !== "" && ev.pct_defectos !== undefined ? parseFloat(ev.pct_defectos).toFixed(1)+"%" : "—"}
+          </span>
+        </div>
+        <div class="eval-field"><label>Registrado por</label><span>${ev.created_by || "—"}</span></div>
+        <div class="eval-field"><label>Fecha</label><span>${ev.created_at ? ev.created_at.slice(0,16).replace("T"," ") : "—"}</span></div>
+      </div>
+      ${lineasTable ? `<div style="margin-top:.7rem">${lineasTable}</div>` : ""}
+      ${ev.observaciones ? `<div class="eval-obs" style="margin-top:.5rem">💬 ${ev.observaciones}</div>` : ""}
+    </div>`;
+  }).join("");
+}
+
+async function deleteEval(rowNum) {
+  if (!confirm("¿Eliminar esta evaluación?")) return;
+  try {
+    await api("deleteEvaluacion", { row: rowNum });
+    showToast("Evaluación eliminada.", "success");
+    const savedFUC = currentFUC;
+    await loadEvalModule();
+    if (savedFUC) selectFUC(savedFUC.num_fuc);
+  } catch(e) {
+    showToast(e.message, "error");
+  }
+}
+
+// Inicializar dropdown al cargar
+initDefectosDropdown();
+
+// ══════════════════════════════════════════════════════════════
+//  MÓDULO BASE DE PRODUCTORES
+// ══════════════════════════════════════════════════════════════
+
+// ── COL_MAP productores ───────────────────────────────────────
+const PROD_COL_MAP = {
+  "VARIEDAD":                       "variedad",
+  "EQUIVALENCIA DE PRODUCTOR":      "equiv_productor",
+  "EQUIVALENCIA PRODUCTOR":         "equiv_productor",
+  "EQUIV PRODUCTOR":                "equiv_productor",
+  "EQUIV DE PRODUCTOR":             "equiv_productor",
+  "CODIGO DE PRODUCTOR ETIQUETA":   "cod_productor_etiqueta",
+  "CODIGO PRODUCTOR ETIQUETA":      "cod_productor_etiqueta",
+  "COD PRODUCTOR ETIQUETA":         "cod_productor_etiqueta",
+  "CODIGO ETIQUETA":                "cod_productor_etiqueta",
+  "ETIQUETA":                       "cod_productor_etiqueta",
+  "CODIGO DE LOTE":                 "cod_lote",
+  "CODIGO LOTE":                    "cod_lote",
+  "COD LOTE":                       "cod_lote",
+  "N LOTE":                         "cod_lote",
+  "CLIENTE":                        "cliente",
+  "CLP":                            "clp",
+  "PRODUCTOR":                      "productor",
+  "LOTE":                           "lote",
+};
+
+// ── Cache de productores (para autocompletado en Guías) ───────
+let allProductores = [];
+
+async function loadProductores() {
+  document.getElementById("prodTableContainer").innerHTML =
+    '<div class="loader"><div class="spinner"></div><p style="margin-top:.5rem">Cargando…</p></div>';
+  try {
+    const res    = await api("getProductores");
+    allProductores = res.data || [];
+    populateCLPDatalist();
+    filterProdTable();
+  } catch(e) {
+    document.getElementById("prodTableContainer").innerHTML =
+      `<p style="color:var(--red);padding:1rem">Error: ${e.message}</p>`;
+  }
+}
+
+function populateCLPDatalist() {
+  const dl = document.getElementById("clpDatalist");
+  if (!dl) return;
+  dl.innerHTML = allProductores
+    .map(p => `<option value="${p.clp || ""}">${p.clp} — ${p.productor || ""} / ${p.lote || ""}</option>`)
+    .join("");
+}
+
+function filterProdTable() {
+  const q = (document.getElementById("searchProd")?.value || "").toLowerCase();
+  const filtered = q
+    ? allProductores.filter(p =>
+        [p.clp, p.productor, p.lote, p.cliente, p.variedad, p.equiv_productor]
+          .some(v => String(v || "").toLowerCase().includes(q))
+      )
+    : allProductores;
+  renderProdTable(filtered);
+}
+
+function renderProdTable(rows) {
+  const el = document.getElementById("prodTableContainer");
+  if (!rows.length) {
+    el.innerHTML = '<p style="padding:1.5rem;color:var(--muted);text-align:center">Sin registros.</p>';
+    return;
+  }
+  const cols = [
+    { key:"variedad",              label:"Variedad" },
+    { key:"equiv_productor",       label:"Equiv. Prod." },
+    { key:"cod_productor_etiqueta",label:"Cód. Prod. Etiq." },
+    { key:"cod_lote",              label:"Cód. Lote" },
+    { key:"cliente",               label:"Cliente" },
+    { key:"clp",                   label:"CLP" },
+    { key:"productor",             label:"Productor" },
+    { key:"lote",                  label:"Lote" },
+  ];
+  const ths = cols.map(c => `<th>${c.label}</th>`).join("") + "<th>Acc.</th>";
+  const trs = rows.map(r => {
+    const tds = cols.map(c => `<td>${r[c.key] ?? ""}</td>`).join("");
+    return `<tr>${tds}<td>
+      <button class="btn btn-danger btn-sm" onclick="deleteProd(${r._row})">🗑️</button>
+    </td></tr>`;
+  }).join("");
+  el.innerHTML = `<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+}
+
+async function deleteProd(rowNum) {
+  if (!confirm("¿Eliminar este registro?")) return;
+  try {
+    await api("deleteProductor", { row: rowNum });
+    showToast("Registro eliminado.", "success");
+    loadProductores();
+  } catch(e) { showToast(e.message, "error"); }
+}
+
+// ── Upload Excel de Productores ───────────────────────────────
+function handleDropProd(e) {
+  e.preventDefault();
+  document.getElementById("uploadZoneProd").classList.remove("drag");
+  const file = e.dataTransfer.files[0];
+  if (file) handleFileProd(file);
+}
+
+async function parseExcelProductores(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb  = XLSX.read(e.target.result, { type:"array", cellDates:false });
+        const ws  = wb.Sheets[wb.SheetNames[0]];
+        const raw = XLSX.utils.sheet_to_json(ws, { header:1, defval:"" });
+
+        // Buscar fila de cabeceras en primeras 15 filas
+        let headerRowIdx = -1;
+        for (let i = 0; i < Math.min(15, raw.length); i++) {
+          const norm = raw[i].map(normalizeHeader);
+          if (norm.some(h => PROD_COL_MAP[h])) { headerRowIdx = i; break; }
+        }
+        if (headerRowIdx === -1)
+          return reject(new Error("No se encontró fila de cabeceras reconocibles en las primeras 15 filas."));
+
+        const normHeaders = raw[headerRowIdx].map(normalizeHeader);
+        const rows = [];
+        for (let i = headerRowIdx + 1; i < raw.length; i++) {
+          const cells = raw[i];
+          const obj   = {};
+          normHeaders.forEach((nh, j) => {
+            const key = PROD_COL_MAP[nh];
+            if (!key) return;
+            // Conservar valor crudo como string
+            let val = cells[j];
+            if (val === null || val === undefined) val = "";
+            obj[key] = String(val).trim();
+          });
+
+          // ── Padding de ceros según especificación del campo ──
+          if (obj.equiv_productor !== undefined && obj.equiv_productor !== "") {
+            // 4 dígitos: 0031, 0032 …
+            const n = parseInt(obj.equiv_productor.replace(/\D/g,""), 10);
+            if (!isNaN(n)) obj.equiv_productor = String(n).padStart(4, "0");
+          }
+          if (obj.cod_productor_etiqueta !== undefined && obj.cod_productor_etiqueta !== "") {
+            // 3 dígitos: 031, 032 …
+            const n = parseInt(obj.cod_productor_etiqueta.replace(/\D/g,""), 10);
+            if (!isNaN(n)) obj.cod_productor_etiqueta = String(n).padStart(3, "0");
+          }
+
+          if (obj["clp"] && obj["clp"].trim()) rows.push(obj);
+        }
+        // El orden del array ya es el mismo que en el Excel (top→bottom)
+        resolve(rows);
+      } catch(err) { reject(err); }
+    };
+    reader.onerror = () => reject(new Error("Error al leer el archivo."));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+async function handleFileProd(file) {
+  if (!file) return;
+  const resultDiv = document.getElementById("uploadResultProd");
+  const msgEl     = document.getElementById("uploadMsgProd");
+  const chipsEl   = document.getElementById("resultChipsProd");
+  resultDiv.style.display = "none";
+  msgEl.textContent = ""; chipsEl.innerHTML = "";
+
+  try {
+    msgEl.textContent       = "⏳ Leyendo Excel…";
+    resultDiv.style.display = "block";
+
+    const rows = await parseExcelProductores(file);
+    if (!rows.length) {
+      msgEl.style.color = "var(--red)";
+      msgEl.textContent = "❌ No se encontraron filas con CLP válido.";
+      return;
+    }
+    msgEl.style.color = "var(--muted)";
+    msgEl.textContent = `⏳ Enviando ${rows.length} filas al servidor…`;
+
+    const res = await api("uploadProductores", { rows });
+
+    const hasDup = res.duplicates && res.duplicates.length > 0;
+    msgEl.style.color = hasDup ? "var(--warn-txt)" : "var(--green)";
+    msgEl.textContent = (hasDup ? "⚠️ " : "✅ ") + res.message;
+
+    chipsEl.innerHTML = `
+      <span class="chip chip-added">➕ ${res.added} nuevos</span>
+      <span class="chip chip-skipped">⏭ ${res.skipped} omitidos</span>
+      <span class="chip chip-total">📊 ${res.total} procesados</span>`;
+
+    // Mostrar detalle de CLPs duplicados
+    if (hasDup) {
+      const dupDiv = document.createElement("div");
+      dupDiv.style.cssText =
+        "margin-top:.8rem;background:#fff3e0;border:1px solid #ffb74d;border-radius:var(--radius);padding:.8rem 1rem;font-size:.83rem";
+      dupDiv.innerHTML = `
+        <strong style="color:var(--warn-txt)">⚠️ Equiv. Prod. que ya existían en la base de datos (omitidos):</strong>
+        <div style="margin-top:.4rem;display:flex;flex-wrap:wrap;gap:.3rem">
+          ${res.duplicates.map(c => `<span style="background:#ffe0b2;border-radius:4px;padding:.15rem .5rem;font-family:monospace">${c}</span>`).join("")}
+        </div>
+        <p style="margin-top:.5rem;color:var(--muted)">El mismo CLP puede tener múltiples registros, pero el Equiv. Prod. debe ser único. Revisa o actualiza estos registros en Google Sheets si es necesario.</p>`;
+      chipsEl.after(dupDiv);
+    }
+
+    loadProductores();
+  } catch(err) {
+    resultDiv.style.display = "block";
+    msgEl.style.color       = "var(--red)";
+    msgEl.textContent       = "❌ " + err.message;
+  }
+  document.getElementById("fileProdInput").value = "";
+}
+
+// ── Auto-fill Guías desde CLP ─────────────────────────────────
+function autoFillFromCLP(clpVal) {
+  if (!clpVal) return;
+  const match = allProductores.find(
+    p => String(p.clp || "").trim().toUpperCase() === String(clpVal).trim().toUpperCase()
+  );
+  if (!match) {
+    showToast(`⚠️ CLP "${clpVal}" no encontrado en Base de Productores. Agrégalo primero.`, "error");
+    return;
+  }
+  // Llenar campos del formulario de Guías
+  if (document.getElementById("fProductor") && !document.getElementById("fProductor").value)
+    document.getElementById("fProductor").value = match.productor || "";
+  if (document.getElementById("fLote") && !document.getElementById("fLote").value)
+    document.getElementById("fLote").value = match.lote || "";
+  if (document.getElementById("fVariedad") && !document.getElementById("fVariedad").value) {
+    const varSel = document.getElementById("fVariedad");
+    const opt = [...varSel.options].find(o =>
+      o.value.toUpperCase() === (match.variedad || "").toUpperCase()
+    );
+    if (opt) varSel.value = opt.value;
+  }
+  if (document.getElementById("fCliente") && !document.getElementById("fCliente").value)
+    document.getElementById("fCliente").value = match.cliente || "";
+  const codEl = document.getElementById("fCodProdEtiq");
+  if (codEl) codEl.value = match.cod_productor_etiqueta || "";
+  showToast("Campos autocompletados desde Base de Productores.", "success");
+}
+
+// ══════════════════════════════════════════════════════════════
+//  BASE DE CALIBRES
+// ══════════════════════════════════════════════════════════════
+
+let allCalibres = [];
+
+async function loadCalibres() {
+  document.getElementById("calibresTable").innerHTML =
+    '<div class="loader"><div class="spinner"></div></div>';
+  try {
+    const res  = await api("getCalibres");
+    allCalibres = res.data || [];
+    populateCultivoFilterCalibres(allCalibres);
+    populateCultivoDatalistCalibres(allCalibres);
+    renderCalibresTable(allCalibres);
+  } catch(e) {
+    document.getElementById("calibresTable").innerHTML =
+      `<p style="color:var(--red);padding:1rem">Error: ${e.message}</p>`;
+  }
+}
+
+function populateCultivoFilterCalibres(rows) {
+  const sel = document.getElementById("filtroCultivoCalibres");
+  if (!sel) return;
+  const current = sel.value;
+  const cultivos = [...new Set(rows.map(r => r.cultivo).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">— Todos los cultivos —</option>' +
+    cultivos.map(c => `<option value="${c}" ${c===current?"selected":""}>${c}</option>`).join("");
+}
+
+function populateCultivoDatalistCalibres(rows) {
+  const dl = document.getElementById("cultivosCalibres");
+  if (!dl) return;
+  const cultivos = [...new Set(rows.map(r => r.cultivo).filter(Boolean))].sort();
+  dl.innerHTML = cultivos.map(c => `<option value="${c}"></option>`).join("");
+}
+
+function renderCalibresTable(rows) {
+  const wrap = document.getElementById("calibresTable");
+  if (!rows.length) {
+    wrap.innerHTML = '<p style="padding:1.2rem;color:var(--muted);text-align:center">Sin calibres registrados. Agrega el primero arriba.</p>';
+    return;
+  }
+
+  // Filtrar según selector de cultivo activo
+  const filtroCultivo = document.getElementById("filtroCultivoCalibres");
+  const filtro = filtroCultivo ? filtroCultivo.value : "";
+  const filtered = filtro ? rows.filter(r => (r.cultivo||"").toUpperCase() === filtro.toUpperCase()) : rows;
+
+  // Agrupar por cultivo
+  const byCultivo = {};
+  filtered.forEach(r => {
+    const c = r.cultivo || "Sin cultivo";
+    if (!byCultivo[c]) byCultivo[c] = [];
+    byCultivo[c].push(r);
+  });
+
+  const html = Object.keys(byCultivo).sort().map(cultivo => {
+    const items = byCultivo[cultivo];
+    const trs = items.map(r => `
+      <tr>
+        <td style="font-weight:700">${r.calibre || ""}</td>
+        <td>${r.descripcion || "—"}</td>
+        <td>${r.created_at ? r.created_at.slice(0,10) : "—"}</td>
+        <td>
+          <button class="btn btn-outline btn-sm" onclick='editCalibre(${JSON.stringify(r)})'>✏️</button>
+          <button class="btn btn-danger btn-sm" style="margin-left:.3rem" onclick="deleteCalibre(${r._row})">🗑️</button>
+        </td>
+      </tr>`).join("");
+    return `
+      <div style="margin-bottom:1rem">
+        <div style="font-weight:700;font-size:.88rem;color:var(--green-d);background:var(--ok-bg);padding:.4rem .8rem;border-radius:var(--radius) var(--radius) 0 0;border:1px solid #a5d6a7">
+          🌱 ${cultivo} <span style="font-weight:400;color:var(--muted)">(${items.length} calibre${items.length!==1?"s":""})</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:.84rem">
+          <thead>
+            <tr style="background:#f1f8e9">
+              <th style="padding:.5rem .8rem;text-align:left;font-weight:600;color:var(--green-d);border-bottom:1px solid var(--border)">Calibre</th>
+              <th style="padding:.5rem .8rem;text-align:left;font-weight:600;color:var(--green-d);border-bottom:1px solid var(--border)">Descripción</th>
+              <th style="padding:.5rem .8rem;text-align:left;font-weight:600;color:var(--green-d);border-bottom:1px solid var(--border)">Registro</th>
+              <th style="padding:.5rem .8rem;width:90px;border-bottom:1px solid var(--border)"></th>
+            </tr>
+          </thead>
+          <tbody>${trs}</tbody>
+        </table>
+      </div>`;
+  }).join("");
+
+  wrap.innerHTML = html || '<p style="padding:1.2rem;color:var(--muted);text-align:center">Sin calibres para este cultivo.</p>';
+}
+
+async function saveCalibre() {
+  const cultivo = document.getElementById("calCultivo").value.trim();
+  const cal     = document.getElementById("calInput").value.trim();
+  const row     = document.getElementById("calEditRow").value;
+  if (!cultivo) { showToast("Ingresa el cultivo.", "error"); return; }
+  if (!cal)     { showToast("Ingresa el calibre.", "error"); return; }
+  try {
+    if (row) {
+      await api("updateCalibre", { cultivo, calibre: cal, descripcion: "", row: parseInt(row) });
+      showToast("Calibre actualizado.", "success");
+    } else {
+      await api("addCalibre", { cultivo, calibre: cal, descripcion: "" });
+      showToast("Calibre agregado.", "success");
+    }
+    cancelCalEdit();
+    await loadCalibres();
+  } catch(e) { showToast(e.message, "error"); }
+}
+
+function editCalibre(r) {
+  document.getElementById("calFormTitle").textContent  = "✏️ Editar Calibre";
+  document.getElementById("calCultivo").value          = r.cultivo || "";
+  document.getElementById("calInput").value            = r.calibre || "";
+  document.getElementById("calEditRow").value          = r._row || "";
+  document.getElementById("calCancelBtn").style.display = "inline-flex";
+}
+
+function cancelCalEdit() {
+  document.getElementById("calFormTitle").textContent  = "➕ Nuevo Calibre";
+  document.getElementById("calCultivo").value          = "";
+  document.getElementById("calInput").value            = "";
+  document.getElementById("calEditRow").value          = "";
+  document.getElementById("calCancelBtn").style.display = "none";
+}
+
+async function deleteCalibre(row) {
+  if (!confirm("¿Eliminar este calibre?")) return;
+  try {
+    await api("deleteCalibre", { row });
+    showToast("Calibre eliminado.", "success");
+    await loadCalibres();
+  } catch(e) { showToast(e.message, "error"); }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  EVAL — LÓGICA DE LÍNEAS / TABLA DINÁMICA
+// ══════════════════════════════════════════════════════════════
+
+let lineaCounter = 0;
+const CAT_OPTS = ["CAT 1","CAT 2","CAT 3"];
+
+function getDefOptsByFUC() {
+  if (!currentFUC) return [];
+  const cultivo = (currentFUC.producto || "").trim().toUpperCase();
+  const defs = allDefectosCat.filter(d =>
+    !cultivo || (d.cultivo || "").trim().toUpperCase() === cultivo
+  );
+  return defs.map(d => d.defecto || d.nombre || "").filter(Boolean);
+}
+
+function defSelect(name, val) {
+  const opts = getDefOptsByFUC();
+  const options = `<option value="">—</option>` +
+    opts.map(o => `<option value="${o}"${o===val?" selected":""}>${o}</option>`).join("");
+  return `<select name="${name}" style="min-width:90px">${options}</select>`;
+}
+
+function catSelect(name, val) {
+  const options = `<option value="">—</option>` +
+    CAT_OPTS.map(o => `<option value="${o}"${o===val?" selected":""}>${o}</option>`).join("");
+  return `<select name="${name}">${options}</select>`;
+}
+
+function calibreSelect(name, val) {
+  // Filtrar calibres por cultivo del FUC activo
+  const cultivo = currentFUC ? (currentFUC.producto || "").trim().toUpperCase() : "";
+  const calibres = cultivo
+    ? allCalibres.filter(c => (c.cultivo || "").trim().toUpperCase() === cultivo)
+    : allCalibres;
+  const options = `<option value="">—</option>` +
+    calibres.map(c => `<option value="${c.calibre}"${c.calibre===val?" selected":""}>${c.calibre}</option>`).join("");
+  return `<select name="${name}">${options}</select>`;
+}
+
+// Convierte formato antiguo (ps_def1/ps_desc1…) al nuevo (ps_defectos:[{pct,def}])
+function normalizeFilaData(f) {
+  if (f.ps_defectos !== undefined) return f;
+  const ps = [];
+  if (f.ps_def1 || f.ps_desc1) ps.push({ pct: f.ps_desc1 || "", def: f.ps_def1 || "" });
+  if (f.ps_def2 || f.ps_desc2) ps.push({ pct: f.ps_desc2 || "", def: f.ps_def2 || "" });
+  const ss = [];
+  if (f.ss_def1 || f.ss_desc1) ss.push({ pct: f.ss_desc1 || "", def: f.ss_def1 || "" });
+  if (f.ss_def2 || f.ss_desc2) ss.push({ pct: f.ss_desc2 || "", def: f.ss_def2 || "" });
+  return { ...f, ps_defectos: ps, ss_defectos: ss };
+}
+
+function buildDefRow(salida, lineaId, filaId, defIdx, d = {}) {
+  const pctEsc = String(d.pct || "").replace(/"/g, "&quot;");
+  const defVal = d.def || "";
+  return `<div id="def-${salida}-${lineaId}-${filaId}-${defIdx}"
+              style="display:flex;align-items:center;gap:.2rem;margin-bottom:.2rem">
+    <input type="number" name="${salida}_dpct-${lineaId}-${filaId}-${defIdx}"
+           value="${pctEsc}" step="0.1" min="0" placeholder="%"
+           style="width:46px;border:1px solid var(--border);border-radius:3px;padding:.15rem .2rem;font-size:.8rem;text-align:center"/>
+    ${defSelect(`${salida}_ddef-${lineaId}-${filaId}-${defIdx}`, defVal)}
+    <button type="button" onclick="removeDefRow('${salida}',${lineaId},${filaId},${defIdx})"
+            style="background:none;border:none;color:var(--red);cursor:pointer;font-size:.9rem;padding:.1rem;line-height:1">✕</button>
+  </div>`;
+}
+
+function addDefRow(salida, lineaId, filaId) {
+  const container = document.getElementById(`${salida}-defs-${lineaId}-${filaId}`);
+  if (!container) return;
+  const count = parseInt(container.dataset.count || 0);
+  container.insertAdjacentHTML('beforeend', buildDefRow(salida, lineaId, filaId, count));
+  container.dataset.count = count + 1;
+}
+
+function removeDefRow(salida, lineaId, filaId, defIdx) {
+  const el = document.getElementById(`def-${salida}-${lineaId}-${filaId}-${defIdx}`);
+  if (el) el.remove();
+}
+
+function buildDefectosList(salida, lineaId, filaId, defectos) {
+  const rows = (defectos && defectos.length ? defectos : [{}])
+    .map((d, i) => buildDefRow(salida, lineaId, filaId, i, d)).join("");
+  const count = defectos && defectos.length ? defectos.length : 1;
+  const btnColor = salida === 'ps' ? 'var(--green)' : '#1565c0';
+  return `<div id="${salida}-defs-${lineaId}-${filaId}" data-count="${count}">${rows}</div>
+    <button type="button" onclick="addDefRow('${salida}',${lineaId},${filaId})"
+      style="font-size:.73rem;background:none;border:1px dashed ${btnColor};border-radius:4px;color:${btnColor};padding:.12rem .4rem;cursor:pointer;margin-top:.25rem;white-space:nowrap">
+      + Defecto</button>`;
+}
+
+function buildFilaRow(lineaId, filaId, f = {}) {
+  f = normalizeFilaData(f);
+  return `<tr id="fila-${lineaId}-${filaId}">
+    <td>${calibreSelect(`cal-${lineaId}-${filaId}`, f.calibre||"")}</td>
+    <td>${catSelect(`ps_cat-${lineaId}-${filaId}`, f.ps_cat||"")}</td>
+    <td style="min-width:180px;padding:.25rem .3rem">${buildDefectosList('ps', lineaId, filaId, f.ps_defectos)}</td>
+    <td>${catSelect(`ss_cat-${lineaId}-${filaId}`, f.ss_cat||"")}</td>
+    <td style="min-width:180px;padding:.25rem .3rem">${buildDefectosList('ss', lineaId, filaId, f.ss_defectos)}</td>
+    <td><button class="btn-rm-row" onclick="removeFilaEval(${lineaId},${filaId})" title="Eliminar fila">✕</button></td>
+  </tr>`;
+}
+
+function buildLineaBlock(lineaId, filas = [{}], lineaNum, obsVal) {
+  const label = lineaNum || lineaId;
+  const filasHTML = filas.map((f, i) => buildFilaRow(lineaId, i, f)).join("");
+  const obsEsc = (obsVal || "").replace(/"/g, "&quot;");
+  return `
+  <div class="linea-block" id="linea-block-${lineaId}" data-linea="${lineaId}" data-fila-count="${filas.length}">
+    <div class="linea-header">
+      <span>📏 Línea ${label}</span>
+      <button onclick="removeLineaEval(${lineaId})">🗑️ Eliminar línea</button>
+    </div>
+    <div class="eval-table-wrap">
+      <table class="eval-table">
+        <thead>
+          <tr>
+            <th rowspan="2">Calibre</th>
+            <th colspan="2" class="th-ps">Desviación de CAT</th>
+            <th colspan="2" class="th-ss">Descarte</th>
+            <th rowspan="2"></th>
+          </tr>
+          <tr>
+            <th class="th-ps">CAT</th><th class="th-ps">%-Defecto</th>
+            <th class="th-ss">CAT</th><th class="th-ss">%-Defecto</th>
+          </tr>
+        </thead>
+        <tbody id="linea-body-${lineaId}">${filasHTML}</tbody>
+      </table>
+    </div>
+    <div class="linea-footer" style="flex-direction:column;gap:.5rem;padding:.6rem .8rem">
+      <div><button class="btn btn-outline btn-sm" onclick="addFilaEval(${lineaId})">➕ Agregar fila</button></div>
+      <div style="width:100%">
+        <label style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:.25rem">Observaciones de esta línea</label>
+        <textarea id="obs-linea-${lineaId}" rows="2"
+          style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:.42rem .65rem;font-size:.86rem;resize:vertical;font-family:inherit;box-sizing:border-box"
+          placeholder="Observaciones para la Línea ${label}…">${obsEsc}</textarea>
+      </div>
+    </div>
+  </div>`;
+}
+
+function addLineaEval(filas, lineaNum, obs) {
+  lineaCounter++;
+  const container = document.getElementById("evalLineasContainer");
+  const div = document.createElement("div");
+  div.innerHTML = buildLineaBlock(lineaCounter, filas || [{}], lineaNum || lineaCounter, obs || "");
+  container.appendChild(div.firstElementChild);
+}
+
+function addFilaEval(lineaId) {
+  const tbody = document.getElementById(`linea-body-${lineaId}`);
+  const block = document.getElementById(`linea-block-${lineaId}`);
+  const count = parseInt(block.dataset.filaCount || "0");
+  const filaId = count;
+  block.dataset.filaCount = count + 1;
+  tbody.insertAdjacentHTML("beforeend", buildFilaRow(lineaId, filaId));
+}
+
+function removeFilaEval(lineaId, filaId) {
+  const row = document.getElementById(`fila-${lineaId}-${filaId}`);
+  if (row) row.remove();
+}
+
+function removeLineaEval(lineaId) {
+  const block = document.getElementById(`linea-block-${lineaId}`);
+  if (block) block.remove();
+}
+
+function collectDefectos(salida, lineaId, filaId) {
+  const container = document.getElementById(`${salida}-defs-${lineaId}-${filaId}`);
+  if (!container) return [];
+  const result = [];
+  container.querySelectorAll(`div[id^="def-${salida}-"]`).forEach(defDiv => {
+    const parts  = defDiv.id.split("-");
+    const defIdx = parts[parts.length - 1];
+    const pctEl  = defDiv.querySelector(`[name="${salida}_dpct-${lineaId}-${filaId}-${defIdx}"]`);
+    const defEl  = defDiv.querySelector(`[name="${salida}_ddef-${lineaId}-${filaId}-${defIdx}"]`);
+    result.push({
+      pct: pctEl ? pctEl.value : "",
+      def: defEl ? defEl.value : ""
+    });
+  });
+  return result;
+}
+
+function collectLineas() {
+  const lineas = [];
+  document.querySelectorAll(".linea-block").forEach(block => {
+    const lid = block.dataset.linea;
+    const filas = [];
+    block.querySelectorAll("tbody tr").forEach(row => {
+      const filaId = row.id.split("-").slice(2).join("-");
+      const g = (name) => {
+        const el = row.querySelector(`[name="${name}-${lid}-${filaId}"]`);
+        return el ? el.value : "";
+      };
+      filas.push({
+        calibre:      g("cal"),
+        ps_cat:       g("ps_cat"),
+        ps_defectos:  collectDefectos("ps", lid, filaId),
+        ss_cat:       g("ss_cat"),
+        ss_defectos:  collectDefectos("ss", lid, filaId),
+      });
+    });
+    const obsEl = document.getElementById(`obs-linea-${lid}`);
+    lineas.push({ linea: parseInt(lid), observaciones: obsEl ? obsEl.value.trim() : "", filas });
+  });
+  return lineas;
+}
+
+function clearEvalLineas() {
+  lineaCounter = 0;
+  const c = document.getElementById("evalLineasContainer");
+  if (c) c.innerHTML = "";
+}
+
+function renderLineasForm(lineasData) {
+  clearEvalLineas();
+  if (!lineasData || !lineasData.length) { addLineaEval(); return; }
+  lineasData.forEach((l, i) => {
+    addLineaEval(l.filas && l.filas.length ? l.filas : [{}], l.linea || (i + 1), l.observaciones || "");
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CATÁLOGO DE DEFECTOS
+// ══════════════════════════════════════════════════════════════
+
+let allDefectosCat = [];
+
+async function loadDefectosCatalog() {
+  document.getElementById("defCatTableWrap").innerHTML =
+    '<div class="loader"><div class="spinner"></div></div>';
+  try {
+    const filtro = document.getElementById("filtroCultivo").value;
+    const params = { all: true };
+    if (filtro) params.cultivo = filtro;
+    const res    = await api("getDefectos", params);
+    allDefectosCat = res.data || [];
+    renderDefectosCatalog(allDefectosCat);
+    populateCultivoFilter(allDefectosCat);
+    populateCultivoDatalist(allDefectosCat);
+  } catch(e) {
+    document.getElementById("defCatTableWrap").innerHTML =
+      `<p style="color:var(--red);padding:1rem">Error: ${e.message}</p>`;
+  }
+}
+
+function populateCultivoFilter(rows) {
+  const cultivosSel = document.getElementById("filtroCultivo");
+  const current     = cultivosSel.value;
+  const cultivos    = [...new Set(rows.map(r => r.cultivo).filter(Boolean))].sort();
+  cultivosSel.innerHTML = '<option value="">— Todos los cultivos —</option>' +
+    cultivos.map(c => `<option value="${c}" ${c===current?"selected":""}>${c}</option>`).join("");
+}
+
+function populateCultivoDatalist(rows) {
+  const dl      = document.getElementById("cultivosCatalog");
+  const cultivos = [...new Set(rows.map(r => r.cultivo).filter(Boolean))].sort();
+  dl.innerHTML  = cultivos.map(c => `<option value="${c}"></option>`).join("");
+}
+
+function renderDefectosCatalog(rows) {
+  if (!rows.length) {
+    document.getElementById("defCatTableWrap").innerHTML =
+      '<p style="padding:1.5rem;color:var(--muted);text-align:center">Sin defectos registrados. Agrega el primero arriba.</p>';
+    return;
+  }
+
+  // Agrupar por cultivo
+  const byCultivo = {};
+  rows.forEach(r => {
+    const c = r.cultivo || "Sin cultivo";
+    if (!byCultivo[c]) byCultivo[c] = [];
+    byCultivo[c].push(r);
+  });
+
+  const html = Object.keys(byCultivo).sort().map(cultivo => {
+    const items = byCultivo[cultivo];
+    const trs   = items.map(r => {
+      const activo   = String(r.activo).toUpperCase() !== "FALSE" && String(r.activo) !== "0";
+      const statusBg = activo ? "s-procesado" : "s-piso";
+      const statusTx = activo ? "Activo" : "Inactivo";
+      return `<tr>
+        <td>${r.defecto || ""}</td>
+        <td><span class="status-badge ${statusBg}">${statusTx}</span></td>
+        <td>
+          <button class="btn btn-outline btn-sm" onclick='editDefectoCatalog(${JSON.stringify(r)})'>✏️</button>
+          <button class="btn btn-danger btn-sm" style="margin-left:.3rem" onclick="deleteDefectoCatalog(${r._row})">🗑️</button>
+        </td>
+      </tr>`;
+    }).join("");
+
+    return `
+      <div style="margin-bottom:1rem">
+        <div style="font-weight:700;font-size:.88rem;color:var(--green-d);background:var(--ok-bg);padding:.4rem .8rem;border-radius:var(--radius) var(--radius) 0 0;border:1px solid #a5d6a7">
+          🌱 ${cultivo} <span style="font-weight:400;color:var(--muted)">(${items.length} defecto${items.length!==1?"s":""})</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:.84rem">
+          <thead>
+            <tr style="background:#f1f8e9">
+              <th style="padding:.5rem .8rem;text-align:left;font-weight:600;color:var(--green-d);border-bottom:1px solid var(--border)">Defecto</th>
+              <th style="padding:.5rem .8rem;text-align:left;font-weight:600;color:var(--green-d);border-bottom:1px solid var(--border);width:90px">Estado</th>
+              <th style="padding:.5rem .8rem;width:90px;border-bottom:1px solid var(--border)"></th>
+            </tr>
+          </thead>
+          <tbody>${trs}</tbody>
+        </table>
+      </div>`;
+  }).join("");
+
+  document.getElementById("defCatTableWrap").innerHTML = html;
+}
+
+async function saveDefectoCatalog() {
+  const cultivo = document.getElementById("defCatCultivo").value.trim();
+  const nombre  = document.getElementById("defCatNombre").value.trim();
+  if (!cultivo || !nombre) { showToast("Cultivo y nombre son requeridos.", "error"); return; }
+
+  const rowVal = document.getElementById("defCatEditRow").value;
+  const defObj = {
+    cultivo,
+    defecto: nombre,
+    activo:  true,
+    id:      document.getElementById("defCatEditId").value || "",
+  };
+
+  try {
+    if (rowVal) {
+      defObj._row = parseInt(rowVal);
+      await api("updateDefecto", { defecto: defObj });
+      showToast("Defecto actualizado.", "success");
+    } else {
+      await api("addDefecto", { defecto: defObj });
+      showToast("Defecto agregado.", "success");
+    }
+    cancelDefectoCatalog();
+    loadDefectosCatalog();
+  } catch(e) {
+    showToast(e.message, "error");
+  }
+}
+
+function editDefectoCatalog(d) {
+  document.getElementById("defCatFormTitle").textContent = "✏️ Editar Defecto";
+  document.getElementById("defCatEditRow").value = d._row;
+  document.getElementById("defCatEditId").value  = d.id  || "";
+  document.getElementById("defCatCultivo").value = d.cultivo || "";
+  document.getElementById("defCatNombre").value  = d.defecto || "";
+}
+
+function cancelDefectoCatalog() {
+  document.getElementById("defCatFormTitle").textContent = "➕ Nuevo Defecto";
+  document.getElementById("defCatEditRow").value = "";
+  document.getElementById("defCatEditId").value  = "";
+  document.getElementById("defCatCultivo").value = "";
+  document.getElementById("defCatNombre").value  = "";
+}
+
+async function deleteDefectoCatalog(rowNum) {
+  if (!confirm("¿Eliminar este defecto del catálogo?")) return;
+  try {
+    await api("deleteDefecto", { row: rowNum });
+    showToast("Defecto eliminado.", "success");
+    loadDefectosCatalog();
+  } catch(e) {
+    showToast(e.message, "error");
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  GESTIÓN DE USUARIOS
+// ══════════════════════════════════════════════════════════════
+
+let allUsuarios = [];
+
+async function loadUsuarios() {
+  document.getElementById("usuariosTable").innerHTML =
+    '<div class="loader"><div class="spinner"></div></div>';
+  try {
+    const res = await api("getUsuarios");
+    allUsuarios = res.data || [];
+    renderUsuariosTable(allUsuarios);
+  } catch(e) {
+    document.getElementById("usuariosTable").innerHTML =
+      `<p style="color:var(--red);padding:1rem">Error: ${e.message}</p>`;
+  }
+}
+
+const MODULO_LABELS = {
+  guias:       "📋 Guías",
+  eval:        "🔬 Evaluaciones",
+  fuc:         "📁 FUC",
+  productores: "👥 Productores",
+  defectos:    "⚙️ Defectos",
+  calibres:    "⚖️ Calibres",
+  usuarios:    "👤 Usuarios",
+};
+
+function renderUsuariosTable(rows) {
+  const wrap = document.getElementById("usuariosTable");
+  if (!rows.length) {
+    wrap.innerHTML = '<p style="padding:1.5rem;color:var(--muted);text-align:center">Sin usuarios registrados.</p>';
+    return;
+  }
+  const trs = rows.map(u => {
+    const accesos = (u.accesos || "all").toLowerCase();
+    let accChips;
+    if (accesos === "all") {
+      accChips = '<span class="status-badge s-procesado">Todos los módulos</span>';
+    } else {
+      accChips = accesos.split(",").map(a => {
+        const label = MODULO_LABELS[a.trim()] || a.trim();
+        return `<span style="background:#e3f2fd;color:#1565c0;border-radius:12px;font-size:.72rem;padding:.15rem .5rem;font-weight:600;white-space:nowrap">${label}</span>`;
+      }).join(" ");
+    }
+    const rolBadge = u.rol === "admin" ? "s-procesado" : u.rol === "analista" ? "s-default" : "s-piso";
+    return `<tr>
+      <td style="font-weight:700">${u.usuario || ""}</td>
+      <td>${u.nombre || "—"}</td>
+      <td><span class="status-badge ${rolBadge}">${(u.rol||"operario").toUpperCase()}</span></td>
+      <td style="max-width:280px;white-space:normal"><div style="display:flex;flex-wrap:wrap;gap:.25rem">${accChips}</div></td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick='editUsuario(${JSON.stringify(u)})'>✏️</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:.3rem" onclick="deleteUsuario(${u._row},'${u.usuario}')">🗑️</button>
+      </td>
+    </tr>`;
+  }).join("");
+
+  wrap.innerHTML = `<table>
+    <thead><tr>
+      <th>Usuario</th><th>Nombre</th><th>Rol</th><th>Accesos</th><th>Acciones</th>
+    </tr></thead>
+    <tbody>${trs}</tbody>
+  </table>`;
+}
+
+function openUsuarioModal(isEdit = false) {
+  document.getElementById("usuarioModalTitle").textContent = isEdit ? "Editar Usuario" : "Nuevo Usuario";
+  document.getElementById("uPassNote").textContent = isEdit ? "(dejar vacío = no cambiar)" : "(requerida)";
+  document.getElementById("usuarioModal").classList.add("open");
+}
+
+function closeUsuarioModal() {
+  document.getElementById("usuarioModal").classList.remove("open");
+  // Limpiar formulario
+  ["uEditRow","uUsuario","uPass","uNombre"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  document.getElementById("uRol").value = "operario";
+  document.getElementById("uAccAll").checked = false;
+  document.querySelectorAll(".acc-chk").forEach(c => c.checked = false);
+}
+
+function toggleAllAccesos(chk) {
+  document.querySelectorAll(".acc-chk").forEach(c => { c.checked = chk.checked; c.disabled = chk.checked; });
+}
+
+function editUsuario(u) {
+  document.getElementById("uEditRow").value  = u._row || "";
+  document.getElementById("uUsuario").value  = u.usuario || "";
+  document.getElementById("uNombre").value   = u.nombre || "";
+  document.getElementById("uRol").value      = u.rol || "operario";
+  document.getElementById("uPass").value     = "";
+
+  const accesos = (u.accesos || "all").toLowerCase();
+  if (accesos === "all") {
+    document.getElementById("uAccAll").checked = true;
+    document.querySelectorAll(".acc-chk").forEach(c => { c.checked = true; c.disabled = true; });
+  } else {
+    document.getElementById("uAccAll").checked = false;
+    const mods = accesos.split(",").map(s => s.trim());
+    document.querySelectorAll(".acc-chk").forEach(c => {
+      c.checked  = mods.includes(c.value);
+      c.disabled = false;
+    });
+  }
+  openUsuarioModal(true);
+}
+
+async function saveUsuario() {
+  const row      = document.getElementById("uEditRow").value;
+  const usuario  = document.getElementById("uUsuario").value.trim();
+  const contrasena = document.getElementById("uPass").value;
+  const nombre   = document.getElementById("uNombre").value.trim();
+  const rol      = document.getElementById("uRol").value;
+
+  if (!usuario) { showToast("El nombre de usuario es requerido.", "error"); return; }
+  if (!row && !contrasena) { showToast("La contraseña es requerida para nuevos usuarios.", "error"); return; }
+
+  // Construir accesos
+  const allChk = document.getElementById("uAccAll").checked;
+  let accesos;
+  if (allChk) {
+    accesos = "all";
+  } else {
+    const mods = [...document.querySelectorAll(".acc-chk:checked")].map(c => c.value);
+    if (!mods.length) { showToast("Selecciona al menos un módulo de acceso.", "error"); return; }
+    accesos = mods.join(",");
+  }
+
+  const payload = { usuario, nombre, rol, accesos };
+  if (contrasena) payload.contrasena = contrasena;
+  if (row) payload.row = parseInt(row);
+
+  try {
+    if (row) {
+      await api("updateUsuario", payload);
+      showToast("Usuario actualizado.", "success");
+    } else {
+      await api("addUsuario", payload);
+      showToast("Usuario creado.", "success");
+    }
+    closeUsuarioModal();
+    loadUsuarios();
+  } catch(e) {
+    showToast(e.message, "error");
+  }
+}
+
+async function deleteUsuario(rowNum, nombre) {
+  if (!confirm(`¿Eliminar el usuario "${nombre}"?`)) return;
+  try {
+    await api("deleteUsuario", { row: rowNum });
+    showToast("Usuario eliminado.", "success");
+    loadUsuarios();
+  } catch(e) {
+    showToast(e.message, "error");
+  }
+}
+
+// Cerrar modal de usuario con Escape
+document.getElementById("usuarioModal").addEventListener("click", function(e) {
+  if (e.target === this) closeUsuarioModal();
+});
+
+// ── MÓDULO: TIEMPOS DE DESPACHO ───────────────────────
+let allDespachos = [];
+
+// Formatea fecha ISO → DD/MM/YYYY
+function formatDateDMY(val) {
+  if (!val) return "—";
+  // "2026-06-24T05:00:00.000Z" o "2026-06-24"
+  const part = String(val).slice(0, 10); // "2026-06-24"
+  const bits = part.split("-");
+  if (bits.length !== 3) return val;
+  return `${bits[2]}/${bits[1]}/${bits[0]}`;
+}
+
+// Normaliza un valor de hora (HH:MM o ISO datetime de Sheets) → "HH:MM"
+function normalizeTime(val) {
+  if (!val) return null;
+  const s = String(val);
+  // Google Sheets guarda horas como fechas: "1899-12-30T02:08:36.000Z"
+  if (s.includes("T")) {
+    const t = s.split("T")[1] || "";
+    return t.slice(0, 5); // "02:08"
+  }
+  // Ya es "HH:MM" o "HH:MM:SS"
+  return s.slice(0, 5);
+}
+
+function calcTimeDiff(t1, t2) {
+  const n1 = normalizeTime(t1);
+  const n2 = normalizeTime(t2);
+  if (!n1 || !n2 || !n1.includes(":") || !n2.includes(":")) return "—";
+  const [h1, m1] = n1.split(":").map(Number);
+  const [h2, m2] = n2.split(":").map(Number);
+  let mins = (h2 * 60 + m2) - (h1 * 60 + m1);
+  if (mins < 0) mins += 24 * 60;
+  const hh = Math.floor(mins / 60);
+  const mm = mins % 60;
+  return hh > 0 ? `${hh}h ${mm}m` : `${mm}m`;
+}
+
+function calcDespachoTiempos() {
+  const ini_cor = document.getElementById("dspHoraInicioCorreccion")?.value;
+  const fin_cor = document.getElementById("dspHoraFinCorreccion")?.value;
+  document.getElementById("dspTiempoCorreccionCalc").textContent =
+    calcTimeDiff(ini_cor, fin_cor);
+
+  const ini_sen = document.getElementById("dspHoraInicioSenasa")?.value;
+  const fin_sen = document.getElementById("dspHoraFinSenasa")?.value;
+  document.getElementById("dspTiempoSenasaCalc").textContent =
+    calcTimeDiff(ini_sen, fin_sen);
+}
+
+async function loadDespachos() {
+  document.getElementById("despachosTable").innerHTML =
+    '<div class="loader"><div class="spinner"></div></div>';
+  try {
+    const data = await api("getDespachos", {});
+    allDespachos = data.rows || [];
+    renderDespachos(allDespachos);
+  } catch(e) {
+    document.getElementById("despachosTable").innerHTML =
+      `<p style="color:var(--red);padding:1rem">Error: ${e.message}</p>`;
+  }
+}
+
+function renderDespachos(rows) {
+  const container = document.getElementById("despachosTable");
+  if (!rows.length) {
+    container.innerHTML = '<p style="color:var(--muted);padding:1rem">Sin registros. Usa el botón "+ Nuevo Despacho".</p>';
+    return;
+  }
+  const sorted = [...rows].sort((a,b) => (b.fecha||"").localeCompare(a.fecha||""));
+  container.innerHTML = `
+  <div style="overflow-x:auto">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Contenedor</th>
+        <th>Booking</th>
+        <th>Exportador</th>
+        <th>H. Programada</th>
+        <th>H. Entrega Carga</th>
+        <th>H. Ini. Revisión Cal.</th>
+        <th>H. Ini. Corrección</th>
+        <th>H. Fin Corrección</th>
+        <th style="background:#fff3e0;color:#e65100">⏱ T. Corrección</th>
+        <th>H. Ini. SENASA</th>
+        <th>H. Fin SENASA</th>
+        <th style="background:#e3f2fd;color:#1565c0">⏱ T. SENASA</th>
+        <th>Áreas</th>
+        <th>Observaciones</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${sorted.map(d => `
+        <tr>
+          <td>${formatDateDMY(d.fecha)}</td>
+          <td style="font-weight:700">${d.num_contenedor||"—"}</td>
+          <td>${d.num_booking||"—"}</td>
+          <td>${d.exportador||"—"}</td>
+          <td>${normalizeTime(d.hora_programada)||"—"}</td>
+          <td>${normalizeTime(d.hora_entrega_carga)||"—"}</td>
+          <td>${normalizeTime(d.hora_inicio_revision_calidad)||"—"}</td>
+          <td>${normalizeTime(d.hora_inicio_correccion)||"—"}</td>
+          <td>${normalizeTime(d.hora_fin_correccion)||"—"}</td>
+          <td style="background:#fff8f0;font-weight:700;color:#e65100">${calcTimeDiff(d.hora_inicio_correccion,d.hora_fin_correccion)}</td>
+          <td>${normalizeTime(d.hora_inicio_revision_senasa)||"—"}</td>
+          <td>${normalizeTime(d.hora_fin_revision_senasa)||"—"}</td>
+          <td style="background:#f0f7ff;font-weight:700;color:#1565c0">${calcTimeDiff(d.hora_inicio_revision_senasa,d.hora_fin_revision_senasa)}</td>
+          <td>${d.areas_involucradas||"—"}</td>
+          <td style="max-width:160px;white-space:normal;font-size:.8rem">${d.observaciones||""}</td>
+          <td style="white-space:nowrap">
+            <button class="btn btn-outline btn-sm" onclick="editDespacho('${d.id}')">✏️</button>
+            <button class="btn btn-sm" style="background:#ffebee;color:var(--red);border:1px solid var(--red)" onclick="deleteDespachoById('${d.id}','${(d.num_contenedor||"").replace(/'/g,"\\'")}')">🗑</button>
+          </td>
+        </tr>`).join("")}
+    </tbody>
+  </table>
+  </div>`;
+}
+
+function populateDspExportadores() {
+  const dl = document.getElementById("dspExportadoresList");
+  if (!dl) return;
+  const fuente = (typeof allFUCs !== "undefined" && allFUCs.length) ? allFUCs : [];
+  const exportadores = [...new Set(
+    fuente.map(f => (f.exportador || "").trim()).filter(Boolean)
+  )].sort();
+  dl.innerHTML = exportadores.map(e => `<option value="${e}"></option>`).join("");
+}
+
+async function ensureFUCsForDespacho() {
+  // Carga FUC silenciosamente si aún no está en memoria
+  if (typeof allFUCs !== "undefined" && allFUCs.length) return;
+  try {
+    const data = await api("getFUCs", {});
+    if (typeof allFUCs !== "undefined") allFUCs = data.data || data.rows || [];
+  } catch(_) {}
+}
+
+async function openDespachoModal(isEdit = false) {
+  document.getElementById("despachoModalTitle").textContent = isEdit ? "Editar Despacho" : "Nuevo Despacho";
+  if (!isEdit) {
+    document.getElementById("dspFecha").value = new Date().toISOString().slice(0,10);
+    document.getElementById("dspTiempoCorreccionCalc").textContent = "—";
+    document.getElementById("dspTiempoSenasaCalc").textContent = "—";
+  }
+  await ensureFUCsForDespacho();
+  populateDspExportadores();
+  document.getElementById("despachoModal").classList.add("open");
+}
+
+function closeDespachoModal() {
+  document.getElementById("despachoModal").classList.remove("open");
+  ["dspId","dspFecha","dspContenedor","dspBooking","dspExportador",
+   "dspHoraProgramada","dspHoraEntregaCarga","dspHoraInicioRevCalidad",
+   "dspHoraInicioCorreccion","dspHoraFinCorreccion","dspAreas",
+   "dspHoraEntregaAnexo","dspHoraValidacionAnexo",
+   "dspHoraInicioSenasa","dspHoraFinSenasa","dspObservaciones"
+  ].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  document.getElementById("dspTiempoCorreccionCalc").textContent = "—";
+  document.getElementById("dspTiempoSenasaCalc").textContent = "—";
+}
+
+function editDespacho(id) {
+  const d = allDespachos.find(x => x.id === id);
+  if (!d) return;
+  document.getElementById("dspId").value                     = d.id || "";
+  document.getElementById("dspFecha").value                  = d.fecha || "";
+  document.getElementById("dspContenedor").value             = d.num_contenedor || "";
+  document.getElementById("dspBooking").value                = d.num_booking || "";
+  document.getElementById("dspExportador").value             = d.exportador || "";
+  document.getElementById("dspHoraProgramada").value         = d.hora_programada || "";
+  document.getElementById("dspHoraEntregaCarga").value       = d.hora_entrega_carga || "";
+  document.getElementById("dspHoraInicioRevCalidad").value   = d.hora_inicio_revision_calidad || "";
+  document.getElementById("dspHoraInicioCorreccion").value   = d.hora_inicio_correccion || "";
+  document.getElementById("dspHoraFinCorreccion").value      = d.hora_fin_correccion || "";
+  document.getElementById("dspHoraEntregaAnexo").value       = d.hora_entrega_anexo || "";
+  document.getElementById("dspHoraValidacionAnexo").value    = d.hora_validacion_anexo || "";
+  document.getElementById("dspHoraInicioSenasa").value       = d.hora_inicio_revision_senasa || "";
+  document.getElementById("dspHoraFinSenasa").value          = d.hora_fin_revision_senasa || "";
+  document.getElementById("dspAreas").value                  = d.areas_involucradas || "";
+  document.getElementById("dspObservaciones").value          = d.observaciones || "";
+  calcDespachoTiempos();
+  openDespachoModal(true);
+}
+
+async function saveDespacho() {
+  const id = document.getElementById("dspId").value;
+  const payload = {
+    fecha:                        document.getElementById("dspFecha").value,
+    num_contenedor:               document.getElementById("dspContenedor").value.trim(),
+    num_booking:                  document.getElementById("dspBooking").value.trim(),
+    exportador:                   document.getElementById("dspExportador").value.trim(),
+    hora_programada:              document.getElementById("dspHoraProgramada").value,
+    hora_entrega_carga:           document.getElementById("dspHoraEntregaCarga").value,
+    hora_inicio_revision_calidad: document.getElementById("dspHoraInicioRevCalidad").value,
+    hora_inicio_correccion:       document.getElementById("dspHoraInicioCorreccion").value,
+    hora_fin_correccion:          document.getElementById("dspHoraFinCorreccion").value,
+    hora_entrega_anexo:           document.getElementById("dspHoraEntregaAnexo").value,
+    hora_validacion_anexo:        document.getElementById("dspHoraValidacionAnexo").value,
+    hora_inicio_revision_senasa:  document.getElementById("dspHoraInicioSenasa").value,
+    hora_fin_revision_senasa:     document.getElementById("dspHoraFinSenasa").value,
+    areas_involucradas:           document.getElementById("dspAreas").value.trim(),
+    observaciones:                document.getElementById("dspObservaciones").value.trim(),
+  };
+  if (!payload.num_contenedor) { showToast("Ingresa el N° de Contenedor.", "error"); return; }
+  try {
+    if (id) {
+      await api("updateDespacho", { id, ...payload });
+      showToast("Despacho actualizado.", "success");
+    } else {
+      await api("addDespacho", payload);
+      showToast("Despacho registrado.", "success");
+    }
+    closeDespachoModal();
+    loadDespachos();
+  } catch(e) {
+    showToast(e.message, "error");
+  }
+}
+
+async function deleteDespachoById(id, contenedor) {
+  if (!confirm(`¿Eliminar el despacho "${contenedor}"?`)) return;
+  try {
+    await api("deleteDespacho", { id });
+    showToast("Despacho eliminado.", "success");
+    loadDespachos();
+  } catch(e) {
+    showToast(e.message, "error");
+  }
+}
+
+document.getElementById("despachoModal").addEventListener("click", function(e) {
+  if (e.target === this) closeDespachoModal();
+});
+</script>
+</body>
+</html>
