@@ -1,0 +1,1367 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#34493d">
+<title>Saneamiento</title>
+<link rel="icon" type="image/png" href="icono_pdc_64.png">
+<link rel="apple-touch-icon" href="icono_pdc_192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Nunito:wght@700;800;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Colores tomados del logo Packing del Carmen: verde #689830 · naranja #F78839 · rojo #C7161D · verde oscuro #34493D */
+:root{
+  --bg:#f1f4ec; --surface:#fff; --surface2:#f7f9f3; --line:#dde4d4;
+  --fg:#1f2b24; --muted:#5d6a61;
+  --brand:#34493d; --brand-ink:#fff;
+  --verde:#689830; --naranja:#f78839; --rojo:#c7161d;
+  --accent:#4f7a22; --accent-ink:#fff; --accent-soft:#e7f0da;
+  --ok:#3e6c19; --ok-soft:#e5efd8; --bad:#b3141b; --bad-soft:#fbe3e1; --warn:#a14f0c; --warn-soft:#fdecdb;
+  --body:"Atkinson Hyperlegible",system-ui,sans-serif; --display:"Nunito","Atkinson Hyperlegible",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --radius:14px; --sombra:0 1px 2px rgba(31,43,36,.06),0 4px 14px rgba(31,43,36,.06);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#111713; --surface:#19211c; --surface2:#1e2822; --line:#2e3a32;
+  --fg:#e7ede8; --muted:#9eaaa1; --brand:#22302a; --brand-ink:#fff;
+  --accent:#8cc04f; --accent-ink:#10200a; --accent-soft:#24331b;
+  --ok:#8cc04f; --ok-soft:#1f2e18; --bad:#f2867f; --bad-soft:#3a1b1a; --warn:#f5a35e; --warn-soft:#37261a;
+  --sombra:none; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45}
+.app{max-width:560px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;background:var(--surface2)}
+.bar{position:sticky;top:0;z-index:4;background:var(--brand);color:var(--brand-ink);padding:calc(env(safe-area-inset-top,0px) + 10px) max(14px,env(safe-area-inset-right,0px)) 12px max(14px,env(safe-area-inset-left,0px));display:flex;align-items:center;gap:10px}
+.bar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:linear-gradient(90deg,var(--verde) 0 33.3%,var(--naranja) 33.3% 66.6%,var(--rojo) 66.6%)}
+.bar button.back{background:rgba(255,255,255,.12);border:0;color:inherit;font-size:24px;line-height:1;cursor:pointer;width:36px;height:36px;border-radius:10px;flex:none}
+.bar .logo{width:38px;height:38px;border-radius:10px;background:#fff;padding:3px;flex:none}
+.bar .t{flex:1;min-width:0}.bar .t b{display:block;font-family:var(--display);font-weight:800;font-size:18px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bar .t small{font-family:var(--mono);font-size:11px;opacity:.8}
+.net{font-family:var(--mono);font-size:11px;padding:4px 9px;border-radius:99px;background:rgba(255,255,255,.14);white-space:nowrap}
+.screen{flex:1;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;box-shadow:var(--sombra)}
+.h{font-family:var(--display);font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:8px 0 0}
+.note{font-size:13px;color:var(--muted);margin:0}
+.btn{font:inherit;font-weight:700;border-radius:12px;padding:14px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer;width:100%;font-size:16px}
+.btn.ghost{background:var(--surface);color:var(--accent);border-color:var(--line)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--naranja);outline-offset:2px}
+.mi{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%;box-shadow:var(--sombra)}
+.mi:disabled{opacity:.55;cursor:default}
+.mi .ic{width:42px;height:42px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:12px;flex:none}
+.mi .tx{flex:1;min-width:0}.mi .tx b{display:block}.mi .tx small{color:var(--muted);font-size:13px}
+.pill{font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:999px;background:var(--surface2);border:1px solid var(--line);white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.pill.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.banner{border-radius:10px;padding:10px 12px;font-size:14px}
+.banner.warn{background:var(--warn-soft);color:var(--warn)}
+.banner.ok{background:var(--ok-soft);color:var(--ok)}
+.banner.bad{background:var(--bad-soft);color:var(--bad)}
+.prog{height:8px;background:var(--line);border-radius:99px;overflow:hidden}.prog i{display:block;height:100%;background:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:5px}
+.cell{font-family:var(--mono);font-size:13px;padding:9px 0;text-align:center;border-radius:6px;border:1px solid var(--line);background:var(--surface);cursor:pointer;color:var(--fg)}
+.cell.done{background:var(--ok-soft);border-color:transparent;color:var(--ok)}
+.cell.alert{background:var(--bad-soft);border-color:transparent;color:var(--bad);font-weight:600}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:15px;padding:11px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer;flex:1 1 auto;min-width:64px}
+.seg button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.seg button.on.badopt{background:var(--bad);border-color:var(--bad);color:#fff}
+.scan{border:2px dashed var(--accent);border-radius:12px;padding:20px;text-align:center;color:var(--accent);background:var(--accent-soft);cursor:pointer;font:inherit;font-weight:700;width:100%;font-size:17px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--muted)}
+input[type=text],input[type=password],input[type=number],select,textarea{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:11px}
+textarea{min-height:70px;resize:vertical}
+.sheet{position:fixed;inset:0;background:rgba(5,15,14,.5);display:flex;align-items:flex-end;justify-content:center;z-index:10}
+.sheet .in{background:var(--surface);width:100%;max-width:520px;border-radius:18px 18px 0 0;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:12px;max-height:92%;overflow-y:auto}
+#reader{width:100%;border-radius:10px;overflow:hidden;background:#000;min-height:240px}
+canvas.sig{width:100%;height:140px;cursor:crosshair;border:1px dashed var(--muted);border-radius:8px;background:var(--surface);touch-action:none;display:block}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:11px 15px;border-radius:10px;font-size:15px;z-index:20;max-width:90%;text-align:center}
+.mono{font-family:var(--mono)}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:center}
+/* vista tipo formato (como el registro en papel) */
+.fmtwrap{overflow-x:auto;background:#fff;color:#111;border:1px solid #9aa;border-radius:6px;-webkit-overflow-scrolling:touch}
+.fmt{border-collapse:collapse;width:100%;font-size:12.5px;color:#111}
+.fmt td,.fmt th{border:1px solid #9aa;padding:5px 6px;text-align:left;vertical-align:middle}
+.fmt th{background:#e7f0da;font-size:11px;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
+.fmt .tit{text-align:center;font-weight:700;font-size:13px}
+.fmt .meta{font-size:11px;white-space:nowrap}
+.fmt tr.nc td{background:#fbe3e1}
+.fmt td.c{text-align:center}
+.fmt .flogo{height:34px;float:left;margin-right:10px}
+.fmt img.fir{height:34px;display:block}
+.fmt button{font:inherit;font-size:12px;font-weight:700;padding:6px 8px;border-radius:6px;border:1px solid #9a6200;background:#fbefd6;color:#7a4d00;cursor:pointer;white-space:nowrap}
+.dia{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--sombra);padding:12px;cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}
+.dia .cal{width:52px;flex:none;text-align:center;border-radius:8px;background:var(--accent-soft);color:var(--accent);padding:4px 0;line-height:1.1}
+.dia .cal b{display:block;font-size:20px}.dia .cal small{font-size:11px;text-transform:uppercase}
+.dia .tx{flex:1;min-width:0}
+.diaw{display:flex;gap:8px;align-items:stretch}.diaw .dia{flex:1;min-width:0}
+.diadel{flex:none;width:46px;border-radius:var(--radius);border:1px solid var(--line);background:var(--surface);color:var(--bad);cursor:pointer;display:grid;place-items:center;box-shadow:var(--sombra)}.diadel svg{width:20px;height:20px}.dia .tx small{color:var(--muted);font-size:13px;display:block}
+/* barra de acciones del registro */
+.acc{display:flex;gap:8px;flex-wrap:wrap}
+.acc button{flex:1 1 0;min-width:84px;display:flex;align-items:center;justify-content:center;gap:6px;font:inherit;font-weight:700;font-size:14px;padding:10px 8px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--accent);cursor:pointer}
+.acc button svg{width:18px;height:18px}
+.acc button.del{color:var(--bad)}
+.fmt .ra{display:flex;gap:4px}.fmt .ra button{padding:5px 7px;font-size:12px}.fmt .ra button.del{border-color:#b3141b;background:#fbe3e1;color:#b3141b}
+@media print{
+  @page{size:landscape;margin:8mm}
+  body{background:#fff}
+  .bar,.toast,.sheet,.screen>*:not(.fmtwrap):not(.imp){display:none!important}
+  .app,.screen{background:#fff;padding:0;max-width:none}
+  .fmtwrap{overflow:visible;border:0}
+  .fmt{min-width:0!important;font-size:9.5px}
+  .fmt .noexp,.fmt button{display:none!important}
+}
+/* inicio */
+.hola{display:flex;align-items:center;gap:12px;background:var(--brand);color:#fff;border-radius:var(--radius);padding:14px;position:relative;overflow:hidden}
+.hola b{font-family:var(--display);font-weight:900;font-size:20px;display:block}
+.hola small{opacity:.85}
+.hola .salir{margin-left:auto;background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:10px;padding:8px 12px;font:inherit;font-size:13px;cursor:pointer}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tile{display:flex;flex-direction:column;gap:8px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;cursor:pointer;text-align:left;font:inherit;color:inherit;box-shadow:var(--sombra);min-width:0}
+.tile:hover{border-color:var(--accent)}
+.tile .ico{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;color:#fff}
+.tile .ico svg{width:26px;height:26px}
+.tile b{font-family:var(--display);font-weight:800;font-size:16px;line-height:1.2}
+.tile small{color:var(--muted);font-size:12.5px;line-height:1.3}
+.tile .cod{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.tile .pill{margin-top:auto}
+@media (max-width:340px){.tiles{grid-template-columns:1fr}}
+/* ingreso */
+.login{min-height:100%;display:flex;flex-direction:column;justify-content:center;gap:18px;padding:28px max(20px,env(safe-area-inset-right,0px)) 28px max(20px,env(safe-area-inset-left,0px));}
+.login .marca{text-align:center}
+.login .marca img{width:min(240px,70%);height:auto;display:block;margin:0 auto 6px}
+.login h1{font-family:var(--display);font-weight:900;font-size:34px;margin:0;color:var(--brand);letter-spacing:-.01em}
+@media (prefers-color-scheme:dark){.login h1{color:#fff}}
+.login .tri{display:flex;justify-content:center;gap:6px;margin:8px 0 4px}.login .tri i{width:28px;height:5px;border-radius:3px}
+.pw{position:relative}.pw input{width:100%;padding-right:62px}.pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--accent);font:inherit;font-weight:700;font-size:13px;cursor:pointer;padding:8px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <button class="back" id="back" aria-label="Volver" hidden>‹</button>
+    <img class="logo" src="icono_pdc_192.png" alt="" id="hLogo">
+    <div class="t"><b id="ttl">Saneamiento PDC</b><small id="sub">Packing del Carmen SAC</small></div>
+    <span class="net" id="net"></span>
+  </header>
+  <main class="screen" id="scr"></main>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="config.js"></script>
+<script>
+/* ===================== utilidades ===================== */
+const C = window.CONFIG;
+const F17 = C.formatos['FT-17'], F20 = C.formatos['FT-20'];
+const MODO_PRUEBA = !C.APPS_SCRIPT_URL;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2,'0');
+const fecha = d => `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+const hora = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${hora(d)}:${pad(d.getSeconds())}`;
+function semanaISO(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y)/864e5+1)/7)}
+const store = {
+  get(k,def){try{const v=localStorage.getItem('pdc_'+k);return v?JSON.parse(v):def}catch(e){return def}},
+  set(k,v){try{localStorage.setItem('pdc_'+k,JSON.stringify(v))}catch(e){}},
+  del(k){try{localStorage.removeItem('pdc_'+k)}catch(e){}}
+};
+function toast(m,ms=2400){document.querySelectorAll('.toast').forEach(z=>z.remove());const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),ms)}
+/* ===================== LISTAS (catálogo administrable) =====================
+   Cada lista: {id, formato, nombre, tipo, items:[{c:código, v:valor, a:alerta, on:activo}]}
+   Orden de carga: valores iniciales de config.js → lo descargado del Google Sheets (guardado en el celular). */
+let CAT={};
+function normDef(d){
+  let items;
+  if(d.tipo==='texto'||d.tipo==='numero')items=[{c:'',v:String(d.valor??''),a:false,on:true}];
+  else if(d.tipo==='area')items=(d.items||[]).map(x=>({c:String(x[0]),v:String(x[1]),e:String(x[2]||''),f:String(x[3]||'Diario'),a:!!x[4],on:true}));
+  else items=(d.items||[]).map(x=>Array.isArray(x)?{c:String(x[0]),v:String(x[1]??''),a:!!x[2],on:true}:{c:'',v:String(x),a:false,on:true});
+  return {id:d.id,formato:d.formato,nombre:d.nombre,tipo:d.tipo,items};
+}
+function cargarCatalogo(){
+  CAT={};C.catalogo.forEach(d=>CAT[d.id]=normDef(d));
+  const rem=store.get('listas',null);
+  if(rem&&rem.listas)Object.values(rem.listas).forEach(l=>{CAT[l.id]={...(CAT[l.id]||{}),...l}});
+}
+const L=id=>(CAT[id]?CAT[id].items:[]).filter(x=>x.on);       // ítems activos
+const T=id=>(L(id)[0]||{}).v||'';                                 // texto simple
+const N=id=>Number(T(id))||0;                                     // número simple
+async function descargarListas(){
+  const s=sesion();if(MODO_PRUEBA||!s||!navigator.onLine)return;
+  descargarFirmas();
+  try{const r=await fetch(C.APPS_SCRIPT_URL+'?accion=listas'+credQS());const j=await r.json();
+    if(j.ok&&j.listas){store.set('listas',{listas:j.listas,ts:Date.now()});cargarCatalogo();if(['home','ft20','ft20dia','adm'].includes(vista().split(':')[0]))render()}}catch(e){}
+}
+cargarCatalogo();
+
+function zonaDe(n){for(const z of L('ft17.zonas')){const [a,b]=z.c.split('-').map(Number);if(n>=a&&n<=(b||a))return z.v}return 'Sin zona asignada'}
+function uid(){return 'FT17-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase()}
+
+/* ===================== red y cola de envíos ===================== */
+function pintarRed(){const q=store.get('cola',[]).length;$('#net').textContent=(navigator.onLine?'En línea':'Sin señal')+(q?` · ${q} por enviar`:'')}
+async function enviar(payload){
+  if(MODO_PRUEBA){await new Promise(r=>setTimeout(r,500));return {ok:true,prueba:true}}
+  const r=await fetch(C.APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
+  const j=await r.json();
+  if(!j.ok) throw new Error(j.error||'Error del servidor');
+  return j;
+}
+async function procesarCola(){
+  const cola=store.get('cola',[]);if(!cola.length||!navigator.onLine)return;
+  // se envían en orden; si uno falla se detiene (así la salida de una visita nunca llega antes que su ingreso)
+  let i=0;
+  for(;i<cola.length;i++){try{await enviar(cola[i]);marcarEnviado(cola[i])}catch(e){if(/PIN/i.test(e.message))toast('PIN incorrecto: vuelve a iniciar sesión');break}}
+  store.set('cola',cola.slice(i));pintarRed();
+  if(i)toast(`${i} registro(s) pendiente(s) enviado(s)`);
+  if(['home','ft17','ft20','ft20dia','hist','mod'].includes(vista().split(':')[0]))render();
+}
+function encolar(p){const q=store.get('cola',[]);q.push(p);store.set('cola',q);pintarRed()}
+// Envía ahora si se puede; si no, queda en cola. Si ya hay cola, se pone al final para respetar el orden.
+async function enviarOEncolar(p){
+  if(store.get('cola',[]).length){encolar(p);procesarCola();return 'cola'}
+  try{const r=await enviar(p);marcarEnviado(p);return r.prueba?'prueba':'ok'}catch(e){encolar(p);return 'cola'}
+}
+function marcarEnviado(p){
+  if(p.accion==='eliminar'||p.accion==='editar')return;
+  if(p.accion==='guardarFirma'){const k=MODO_PRUEBA?'firmas_prueba':'firmas';const l=store.get(k,[]);const x=l.find(z=>z.id===p.firmaReg.id);if(x){x.sync=true;store.set(k,l)}return}
+  if(p.accion==='vobo'){const l=store.get('vobo_local',[]);const x=l.find(z=>z.id===p.id);if(x){x.sync=true;store.set('vobo_local',l)}return}
+  if(p.registro||p.actualizar){const v=store.get('visitas',[]);const x=v.find(z=>z.id===(p.registro||p.actualizar).id);if(x){if(p.registro)x.syncIng=true;else x.syncSal=true;store.set('visitas',v)}return}
+  const id=p.cabecera&&p.cabecera.id_inspeccion;const h=store.get('historial',[]);const x=h.find(z=>z.id===id);if(x){x.estado='Enviado';store.set('historial',h)}
+}
+window.addEventListener('online',()=>{pintarRed();procesarCola()});
+window.addEventListener('offline',pintarRed);
+
+/* ===================== navegación ===================== */
+let pila=['home'];
+const vista=()=>pila[pila.length-1];
+function ir(v){pila.push(v);render()}
+$('#back').onclick=()=>{if(pila.length>1)pila.pop();else pila=['home'];render()};
+function cab(t,s){$('.bar').hidden=false;$('#ttl').textContent=t;$('#sub').textContent=s;$('#back').hidden=pila.length<2&&!vista().startsWith('adm')}
+// Solo sube al inicio cuando se cambia de pantalla; si se actualiza la misma pantalla, se queda donde estaba
+let vistaAnt=null;
+function render(){const misma=vista()===vistaAnt,y=window.scrollY;vistaAnt=vista();render0();if(misma)requestAnimationFrame(()=>window.scrollTo(0,y));else window.scrollTo(0,0)}
+function render0(){pintarRed();const v=vista().split(':')[0];
+  const s=sesion();if(!s)return login();const prm=vista().slice(v.length+1);
+  const VISTAS={home,ft17,ft17ins,ft17dia,ft20,ft20dia,ft20nuevo,hist,adm,admEdit,admNueva,admUsr,admUsrEdit,admFirmas,admCorreos,admCorreoEdit,mod,modIns,modDia};
+  const req={ft17:'FT-17',ft17ins:'FT-17',ft17dia:'FT-17',ft20:'FT-20',ft20dia:'FT-20',ft20nuevo:'FT-20',adm:'ADMIN',admEdit:'ADMIN',admNueva:'ADMIN',admUsr:'ADMIN',admUsrEdit:'ADMIN',admFirmas:'ADMIN',admCorreos:'ADMIN',admCorreoEdit:'ADMIN'}[v]||(['mod','modIns','modDia'].includes(v)?prm.split('|')[0]:null);
+  if(req&&!puede(req)){toast('No tienes ingreso a este módulo');pila=['home'];return home()}
+  VISTAS[v](prm)}
+const sesion=()=>store.get('sesion',null);
+const cred=()=>{const s=sesion()||{};return {uid:s.uid,pin:s.pin}};
+const credQS=()=>{const s=sesion()||{};return '&uid='+encodeURIComponent(s.uid||'')+'&pin='+encodeURIComponent(s.pin||'')};
+const puede=f=>{const s=sesion();return !!s&&(s.maestro||(s.permisos||[]).includes(f))};
+// Módulos que se pueden habilitar a cada usuario
+const MODULOS=()=>[...Object.entries(C.formatos).map(([k,v])=>({id:k,nombre:`${k} · ${v.titulo}`})),{id:'VOBO',nombre:'Dar V°B° (supervisor)'},{id:'EDITAR',nombre:'Editar y eliminar registros'},{id:'ADMIN',nombre:'Administrar listas y usuarios'}];
+
+/* ===================== login ===================== */
+// Al abrir la app con señal, actualiza los permisos del usuario (o lo saca si fue desactivado)
+async function revalidar(){
+  const s=sesion();if(MODO_PRUEBA||!s||!navigator.onLine)return;
+  try{const r=await fetch(C.APPS_SCRIPT_URL+'?accion=login'+credQS());const j=await r.json();
+    if(!j.ok){store.del('sesion');pila=['home'];toast('Tu acceso cambió. Vuelve a ingresar.',3500);return render()}
+    if(JSON.stringify(j.permisos)!==JSON.stringify(s.permisos)){store.set('sesion',{...s,permisos:j.permisos,usuario:j.nombre});render()}
+    descargarListas();
+  }catch(e){}
+}
+const usuariosPrueba=()=>store.get('usuarios_prueba',null)||C.usuariosPrueba||[];
+function login(){
+  $('.bar').hidden=true;
+  $('#scr').innerHTML=`<div class="login">
+    <div class="marca"><img src="logo_pdc.png" alt="Packing del Carmen" onerror="this.style.display='none'">
+      <div class="tri"><i style="background:var(--verde)"></i><i style="background:var(--naranja)"></i><i style="background:var(--rojo)"></i></div>
+      <h1>Saneamiento</h1><p class="note">Registros digitales · ${esc(C.empresa)}</p></div>
+    ${MODO_PRUEBA?'<div class="banner warn"><b>Modo prueba:</b> nada se envía. Usuarios de ejemplo: <b>indira</b>, <b>operario</b> o <b>admin</b> (cualquier contraseña).</div>':''}
+    <form class="card" id="lgForm" style="display:flex;flex-direction:column;gap:12px" autocomplete="on">
+      <label class="f">Usuario<input type="text" id="lgUser" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Ej.: rhuaman"></label>
+      <label class="f">Contraseña<span class="pw"><input type="password" id="lgPin" autocomplete="current-password"><button type="button" id="lgVer">Ver</button></span></label>
+      <button class="btn" id="lgGo" type="submit">Ingresar</button>
+    </form>
+    <p class="note" style="text-align:center">¿Olvidaste tu contraseña? Pide a Calidad que la restablezca.</p>
+  </div>`;
+  $('#lgVer').onclick=()=>{const i=$('#lgPin');i.type=i.type==='password'?'text':'password';$('#lgVer').textContent=i.type==='password'?'Ver':'Ocultar'};
+  $('#lgForm').onsubmit=async e=>{
+    e.preventDefault();
+    const usr=$('#lgUser').value.trim().toLowerCase(),pin=$('#lgPin').value;
+    if(!usr)return toast('Escribe tu usuario');
+    if(!pin&&!MODO_PRUEBA)return toast('Escribe tu contraseña');
+    let ses;
+    if(MODO_PRUEBA){
+      if(usr==='admin')ses={uid:'__admin',usuario:'Administrador',login:'admin',pin,permisos:MODULOS().map(m=>m.id),maestro:true};
+      else{const u=usuariosPrueba().find(x=>(x.usuario||'').toLowerCase()===usr&&x.activo!==false);if(!u)return toast('Usuario o contraseña incorrectos');ses={uid:u.id,usuario:u.nombre,login:usr,pin,permisos:u.permisos||[]}}
+    }else{
+      if(!navigator.onLine)return toast('Se necesita señal para ingresar');
+      $('#lgGo').disabled=true;
+      try{const r=await fetch(C.APPS_SCRIPT_URL+'?accion=login&usuario='+encodeURIComponent(usr)+'&pin='+encodeURIComponent(pin));const j=await r.json();
+        if(!j.ok){$('#lgGo').disabled=false;return toast('Usuario o contraseña incorrectos')}
+        ses={uid:j.id,usuario:j.nombre,login:usr,pin,permisos:j.permisos||[],maestro:j.id==='__admin'}}
+      catch(err){$('#lgGo').disabled=false;return toast('No se pudo conectar. Intenta de nuevo.')}
+    }
+    store.set('sesion',ses);pila=['home'];render();abrirPendiente();descargarListas();
+  };
+}
+function abrirPendiente(){const n=store.get('cebPend',null);if(n&&sesion()&&puede('FT-17')){store.del('cebPend');pila=['home','ft17','ft17ins'];render();abrirCeb(n,false)}}
+
+/* ===================== inicio ===================== */
+const ICO={
+  'FT-17':'<path d="M3 11.5 12 5l9 6.5V19H3z"/><circle cx="12" cy="14.5" r="2.2"/>',
+  'FT-20':'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.3"/><path d="M5.6 16.4c.8-1.5 2-2.2 3.4-2.2s2.6.7 3.4 2.2M14.5 10h4M14.5 13.5h4"/>',
+  'FT-07':'<path d="M3 21V10l9-6 9 6v11"/><path d="M9.5 21v-6h5v6"/><path d="M14 6.5c1-1.2 2.4-1.6 3.6-1"/>',
+  'FT-14':'<circle cx="6.8" cy="14.5" r="3.6"/><circle cx="17.2" cy="14.5" r="3.6"/><path d="M10.4 14.2c1-.7 2.2-.7 3.2 0M3.4 13.2 5 8.5h2M20.6 13.2 19 8.5h-2"/>',
+  'FT-18':'<rect x="3" y="9" width="18" height="10" rx="1.6"/><path d="M7 9V6.5h10V9M3 14h18M8 14v5M16 14v5"/>',
+  'FT-19':'<rect x="5" y="3" width="14" height="18" rx="2.2"/><path d="M12.6 7 10 12.2h4L11.4 17"/>'
+};
+const COLOR={'FT-17':'var(--verde)','FT-20':'var(--naranja)','FT-07':'#4d6b5a','FT-14':'var(--rojo)','FT-18':'#8a6d1f','FT-19':'#2f6f8f'};
+const svg=d=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+function home(){
+  cab('Saneamiento',C.empresa);
+  const s=sesion(), b=store.get('ft17_borrador',null);
+  const hechos=b?Object.keys(b.d).length:0;
+  const hall=b?Object.values(b.d).filter(hallazgo).length:0;
+  const enPlanta=visitasVisibles().filter(v=>!v.salida).length;
+  const hoy=new Date(),hh=hoy.getHours(),saludo=hh<12?'Buenos días':hh<19?'Buenas tardes':'Buenas noches';
+  const tile=(f,id,titulo,sub,pill)=>`<button class="tile" ${id}><span class="ico" style="background:${COLOR[f]}">${svg(ICO[f])}</span><span class="cod">${f}</span><b>${esc(titulo)}</b><small>${esc(sub)}</small>${pill||''}</button>`;
+  const tiles=[
+    puede('FT-17')?tile('FT-17','id="go17"','Control de cebaderos',`Semanal · ${N('ft17.total')} cebaderos`,b?`<span class="pill ${hall?'bad':'warn'}">En curso ${hechos}/${N('ft17.total')}</span>`:''):'',
+    puede('FT-20')?tile('FT-20','id="go20"','Control de visitas','Ingreso y salida',enPlanta?`<span class="pill warn">${enPlanta} en planta</span>`:''):'',
+    ...MODLIST.filter(puede).map(f=>tile(f,`data-mod="${f}"`,MODS[f].titulo,MODS[f].sub,borMod(f)?'<span class="pill warn">En curso</span>':''))
+  ].filter(Boolean);
+  const cola=store.get('cola',[]).length;
+  $('#scr').innerHTML=`
+  ${MODO_PRUEBA?'<div class="banner warn"><b>Modo prueba:</b> nada se envía todavía.</div>':''}
+  <div class="hola"><span><small>${saludo},</small><b>${esc(s.usuario)}</b><small>${DIAS[hoy.getDay()]} ${fecha(hoy)} · Semana ${semanaISO(hoy)}</small></span><button class="salir" id="salir">Salir</button></div>
+  ${cola?`<button class="banner warn" id="goHist" style="border:0;text-align:left;font:inherit;cursor:pointer">${cola} registro(s) esperando señal para enviarse · Ver</button>`:''}
+  ${tiles.length?`<p class="h">Registros</p><div class="tiles">${tiles.join('')}</div>`:''}
+  ${puede('ADMIN')?`<p class="h">Administración</p><button class="mi" id="goAdm"><span class="ic">${svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>')}</span><span class="tx"><b>Administrar listas y usuarios</b><small>Desplegables, usuarios, contraseñas y permisos</small></span></button>`:''}
+  ${!tiles.length&&!puede('ADMIN')?'<div class="banner warn">Tu usuario aún no tiene módulos habilitados. Pide a Calidad que te dé ingreso.</div>':''}`;
+  const on=(id,f)=>{const e=$(id);if(e)e.onclick=f};
+  on('#go17',()=>ir('ft17'));$('#scr').querySelectorAll('[data-mod]').forEach(e=>e.onclick=()=>ir('mod:'+e.dataset.mod));on('#go20',()=>ir('ft20'));on('#goHist',()=>ir('hist'));on('#goAdm',()=>ir('adm'));
+  $('#salir').onclick=()=>{store.del('sesion');pila=['home'];render()};
+}
+
+/* ===================== FT-17 cebaderos ===================== */
+// Opciones salen de las listas ft17.consumo / ft17.incidencia / ft17.recebado (la 1.ª activa es la de "sin novedad")
+const LST={con:'ft17.consumo',inc:'ft17.incidencia',rec:'ft17.recebado'};
+const OPC=k=>L(LST[k]).map(x=>[x.c,x.v]);
+const def=k=>(L(LST[k])[0]||{}).c||'';
+const esAlerta=(k,c)=>(CAT[LST[k]]?.items||[]).some(x=>x.c===c&&x.a);
+const MALOS={get con(){return L(LST.con).filter(x=>x.a).map(x=>x.c)},get inc(){return L(LST.inc).filter(x=>x.a).map(x=>x.c)},get rec(){return L(LST.rec).filter(x=>x.a).map(x=>x.c)}};
+function borrador(reg){let b=store.get('ft17_borrador',null);if(!b){const d=new Date();b={id:uid(),inicio:iso(d),d:{},obs:'',fecha:(reg&&reg.fecha)||null};store.set('ft17_borrador',b)}return b}
+const hallazgo=x=>esAlerta('con',x.con)||esAlerta('inc',x.inc)||esAlerta('rec',x.rec);
+function ft17ins(){
+  const TOT=N('ft17.total');const bb0=borrador();
+  cab('Inspección de cebaderos',`${F17.codigo} · V${F17.version} · ${bb0.fecha||fecha(new Date())}`);
+  const b=borrador(), n=Object.keys(b.d).filter(k=>+k<=TOT).length, nh=Object.values(b.d).filter(hallazgo).length;
+  let g='';for(let i=1;i<=TOT;i++){const x=b.d[i];g+=`<button class="cell ${!x?'':hallazgo(x)?'alert':'done'}" data-n="${i}" aria-label="Cebadero ${i}">${i}</button>`}
+  $('#scr').innerHTML=`
+  ${b.edit?'<div class="banner warn"><b>Editando un registro ya enviado.</b> Al enviarlo reemplazará al anterior.</div>':''}
+  ${campoFecha('fIns',b.fecha)}
+  <button class="scan" id="scan">▣ Escanear QR del cebadero</button>
+  <div class="card"><div class="row" style="margin-bottom:6px"><b>${n} de ${TOT} revisados</b>${nh?`<span class="pill bad">${nh} con hallazgo</span>`:''}</div><div class="prog"><i style="width:${n/TOT*100}%"></i></div><p class="note" style="margin-top:6px">Verde = sin novedad · Rojo = hallazgo. Ingrediente activo: ${esc(T('ft17.ingrediente'))}.</p></div>
+  <button class="btn ghost" id="resto">Marcar pendientes como "${esc((L(LST.con)[0]||{}).v||'sin novedad')}"</button>
+  <p class="h">Cebaderos (toca uno si no puedes escanear)</p>
+  <div class="grid" id="grid">${g}</div>
+  <label class="f">Observaciones generales<textarea id="obs" placeholder="Opcional">${esc(b.obs)}</textarea></label>
+  <button class="btn" id="fin">Terminar y firmar</button>
+  <button class="btn ghost" id="desc">Descartar esta inspección</button>`;
+  $('#grid').onclick=e=>{const c=e.target.closest('.cell');if(c)abrirCeb(+c.dataset.n)};
+  $('#scan').onclick=escanear;
+  $('#fIns').onchange=()=>{const f=leerFecha('#fIns');if(!f){toast('La fecha no puede ser posterior a hoy');$('#fIns').value=aISO(borrador().fecha||hoyStr());return}const bb=borrador();bb.fecha=f===hoyStr()?null:f;store.set('ft17_borrador',bb);cab('Inspección de cebaderos',`${F17.codigo} · V${F17.version} · ${f}`)};
+  $('#obs').oninput=e=>{const bb=borrador();bb.obs=e.target.value;store.set('ft17_borrador',bb)};
+  $('#resto').onclick=()=>{const bb=borrador(),h=hora(new Date());let k=0;for(let i=1;i<=TOT;i++)if(!bb.d[i]){bb.d[i]={con:def('con'),inc:def('inc'),rec:def('rec'),h};k++}store.set('ft17_borrador',bb);toast(`${k} cebaderos marcados sin novedad`);render()};
+  $('#fin').onclick=()=>{const bb=borrador();let f=0;for(let i=1;i<=TOT;i++)if(!bb.d[i])f++;if(f)return toast(`Faltan ${f} cebaderos por revisar`);firmar()};
+  $('#desc').onclick=()=>confirmar('¿Descartar la inspección en curso? Se borra lo marcado.',()=>{store.del('ft17_borrador');pila=['home','ft17'];render()});
+}
+function confirmar(msg,si){const sh=document.createElement('div');sh.className='sheet';sh.innerHTML=`<div class="in"><b>${esc(msg)}</b><button class="btn" id="cSi" style="background:var(--bad);border-color:var(--bad)">Sí, descartar</button><button class="btn ghost" id="cNo">Cancelar</button></div>`;document.body.appendChild(sh);sh.querySelector('#cNo').onclick=()=>sh.remove();sh.querySelector('#cSi').onclick=()=>{sh.remove();si()}}
+
+function abrirCeb(i,desdeQR){
+  if(!(i>=1&&i<=N('ft17.total')))return toast('Ese número de cebadero no existe');
+  const b=borrador();const tmp={...(b.d[i]||{con:def('con'),inc:def('inc'),rec:def('rec')})};
+  const seg=k=>`<div class="seg" data-k="${k}">`+OPC(k).map(o=>`<button type="button" data-v="${o[0]}" class="${tmp[k]===o[0]?'on':''} ${MALOS[k].includes(o[0])?'badopt':''}">${o[1]}</button>`).join('')+`</div>`;
+  const sh=document.createElement('div');sh.className='sheet';
+  sh.innerHTML=`<div class="in" role="dialog" aria-label="Cebadero ${i}">
+    ${desdeQR?'<span class="pill ok" style="align-self:flex-start">QR leído ✓</span>':''}
+    <div><b style="font-size:20px">Cebadero N° <span class="mono">${i}</span></b><div class="note">${esc(zonaDe(i))} · ${esc(T('ft17.ingrediente'))}</div></div>
+    <p class="h">Consumo</p>${seg('con')}
+    <p class="h">Incidencia</p>${seg('inc')}
+    <p class="h">Recebado</p>${seg('rec')}
+    <button class="btn" id="ok">${desdeQR?'Guardar y escanear otro':'Guardar'}</button>
+    <button class="btn ghost" id="cx">Cancelar</button></div>`;
+  sh.querySelectorAll('.seg').forEach(s=>s.onclick=e=>{const x=e.target.closest('button');if(!x)return;tmp[s.dataset.k]=x.dataset.v;s.querySelectorAll('button').forEach(z=>z.classList.toggle('on',z===x))});
+  sh.querySelector('#cx').onclick=()=>sh.remove();
+  sh.querySelector('#ok').onclick=()=>{const bb=borrador();bb.d[i]={...tmp,h:hora(new Date())};store.set('ft17_borrador',bb);sh.remove();if(hallazgo(tmp))toast(`Cebadero ${i}: hallazgo registrado`);if(vista()==='ft17ins')render();if(desdeQR)setTimeout(escanear,300)};
+  document.body.appendChild(sh);
+}
+
+/* ---------- FT-17: inicio del módulo (botón + historial) y vista tipo formato ---------- */
+function guardarDet17(p){const d=store.get('ft17_det',{});d[p.cabecera.id_inspeccion]={cab:{...p.cabecera,firma_img:p.firmaMini},filas:p.filas};const ks=Object.keys(d);while(ks.length>8)delete d[ks.shift()];store.set('ft17_det',d)}
+function insp17(){
+  const loc=store.get('historial',[]).filter(x=>x.formato==='FT-17');
+  const det=store.get('ft17_det',{});
+  const m={};(store.get('srv_FT-17',[])).forEach(c=>m[c.id_inspeccion]={id:c.id_inspeccion,fecha:c.fecha,semana:c.semana,insp:c.inspeccionado_por,hall:+c.con_hallazgo||0,estado:'Enviado',reg:c.regularizado==='SÍ'});
+  loc.forEach(x=>{const c=(det[x.id]||{}).cab||{};m[x.id]={...(m[x.id]||{}),id:x.id,fecha:x.fecha,semana:c.semana||(m[x.id]||{}).semana,insp:c.inspeccionado_por||(m[x.id]||{}).insp,hall:x.hallazgos,reg:c.regularizado==='SÍ'||(m[x.id]||{}).reg,estado:(m[x.id]||{}).estado==='Enviado'?'Enviado':x.estado}});
+  return Object.values(m).sort((a,b)=>aD(b.fecha)-aD(a.fecha));
+}
+const aD=f=>{const m=String(f||'').match(/(\d+)\/(\d+)\/(\d+)/);return m?new Date(+m[3],m[2]-1,+m[1]).getTime():0};
+const DIAS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],MESES=['ene','feb','mar','abr','may','jun','jul','ago','set','oct','nov','dic'];
+function calendario(f){const t=aD(f);if(!t)return'<span class="cal">—</span>';const d=new Date(t);return `<span class="cal"><small>${DIAS[d.getDay()]}</small><b>${d.getDate()}</b><small>${MESES[d.getMonth()]}</small></span>`}
+async function traerHist(formato){
+  const s=sesion();if(MODO_PRUEBA||!s||!navigator.onLine)return;
+  try{const r=await fetch(C.APPS_SCRIPT_URL+'?accion=historial&formato='+formato+credQS());const j=await r.json();
+    if(j.ok){store.set('srv_'+formato,j.filas||[]);store.set('srvvb_'+formato,j.vobos||[]);const v=vista().split(':')[0];if((formato==='FT-17'&&v==='ft17')||(formato==='FT-20'&&['ft20','ft20dia','home'].includes(v))||vista()==='mod:'+formato)render()}}catch(e){}
+}
+let ultHist={};
+function refrescar(formato){if(Date.now()-(ultHist[formato]||0)>20000){ultHist[formato]=Date.now();traerHist(formato)}}
+
+function ft17(){
+  cab('Control de cebaderos',`${F17.codigo} · V${F17.version} · semanal`);
+  refrescar('FT-17');
+  const b=store.get('ft17_borrador',null),TOT=N('ft17.total');
+  const n=b?Object.keys(b.d).filter(k=>+k<=TOT).length:0;
+  const lista=insp17();
+  $('#scr').innerHTML=`
+  ${b?`<button class="btn" id="cont">▶ Continuar inspección del ${esc(b.fecha||hoyStr())} (${n}/${TOT})</button>`:`<button class="btn" id="nuevaIns">+ Registrar nueva inspección</button>`}
+  <p class="note">Dentro del registro puedes elegir la fecha (por defecto, hoy).</p>
+  <p class="h">Historial por fecha</p>
+  ${lista.length?lista.map(x=>`<div class="diaw"><button class="dia" data-id="${esc(x.id)}">${calendario(x.fecha)}<span class="tx"><b>${esc(x.fecha)}${x.semana?' · Semana '+esc(x.semana):''}</b><small>${esc(x.insp||'')}</small></span><span style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${x.hall?`<span class="pill bad">${x.hall} hallazgo(s)</span>`:'<span class="pill ok">Sin hallazgos</span>'}${vobo('FT-17',x.id,'SS')?'<span class="pill ok">V°B° ✓</span>':''}${x.estado!=='Enviado'?'<span class="pill warn">Por enviar</span>':''}</span></button>${btnDel(x.id,x.fecha)}</div>`).join(''):'<p class="note">Aún no hay inspecciones registradas.</p>'}`;
+  if(b)$('#cont').onclick=()=>ir('ft17ins');else $('#nuevaIns').onclick=()=>{borrador();ir('ft17ins')};
+  $('#scr').querySelectorAll('[data-id]').forEach(e=>e.onclick=()=>ir('ft17dia:'+e.dataset.id));
+  $('#scr').querySelectorAll('[data-idel]').forEach(e=>e.onclick=()=>eliminarReg('FT-17',e.dataset.idel,'inspeccion',['home','ft17'],`la inspección de cebaderos del ${e.dataset.fecha}`));
+}
+
+let solo17=false;
+async function ft17dia(id){
+  cab('Registro de cebaderos',`${F17.codigo} · V${F17.version}`);
+  let d=store.get('ft17_det',{})[id];
+  if(!d){
+    $('#scr').innerHTML='<p class="note">Cargando registro…</p>';
+    if(MODO_PRUEBA||!navigator.onLine){$('#scr').innerHTML='<p class="note">Este registro no está guardado en este equipo. Se necesita señal para verlo.</p>';return}
+    try{const s=sesion();const r=await fetch(C.APPS_SCRIPT_URL+'?accion=detalle&formato=FT-17&id='+encodeURIComponent(id)+credQS());const j=await r.json();
+      const c=(store.get('srv_FT-17',[])).find(x=>x.id_inspeccion===id)||{};d={cab:c,filas:j.filas||[]};const dd=store.get('ft17_det',{});dd[id]=d;const ks=Object.keys(dd);while(ks.length>8)delete dd[ks.shift()];store.set('ft17_det',dd)}
+    catch(e){$('#scr').innerHTML='<p class="note">No se pudo cargar el registro. Revisa la señal.</p>';return}
+    if(vista()!=='ft17dia:'+id)return;
+  }
+  const c=d.cab,fl=d.filas.slice().sort((a,b)=>a.cebadero-b.cebadero);
+  const desc=(k,code)=>{const it=(CAT[LST[k]]?.items||[]).find(x=>x.c===code);return it?it.v:code};
+  const ver=solo17?fl.filter(f=>f.hallazgo==='SÍ'):fl;
+  $('#scr').innerHTML=`
+  <button class="btn" id="nuevaIns2">${store.get('ft17_borrador',null)?'▶ Continuar inspección en curso':'+ Registrar nueva inspección'}</button>
+  ${barraAcc({editar:1,eliminar:1})}
+  <div class="fmtwrap"><table class="fmt">
+    <tr><td class="tit" colspan="4"><img class="flogo" src="logo_pdc.png" alt="">${esc(C.empresa)}<br>REGISTRO DE CONTROL DE CEBADEROS</td><td class="meta" colspan="2">Código: ${F17.codigo}<br>Fecha: ${F17.fecha||''}<br>Versión: ${F17.version}</td></tr>
+    <tr><td colspan="3"><b>FECHA:</b> ${esc(c.fecha)}${c.semana?' · Sem. '+esc(c.semana):''}</td><td colspan="3"><b>INSPECCIONADO POR:</b> ${esc(c.inspeccionado_por||'')}</td></tr>
+    <tr><td colspan="6"><b>INGREDIENTE ACTIVO:</b> ${esc(c.ingrediente_activo||'')}</td></tr>
+    <tr><th>N°</th><th>Zona</th><th>Consumo</th><th>Incidencia</th><th>Recebado</th><th>Hora</th></tr>
+    ${ver.map(f=>`<tr class="${f.hallazgo==='SÍ'?'nc':''}"><td class="c"><b>${esc(f.cebadero)}</b></td><td>${esc(f.zona)}</td><td>${esc(f.consumo)}</td><td>${esc(f.incidencia)}</td><td>${esc(f.recebado)}</td><td class="c">${esc(f.hora_revision)}</td></tr>`).join('')||'<tr><td colspan="6">Sin hallazgos</td></tr>'}
+    <tr><td colspan="6"><b>Observaciones:</b> ${esc(c.observaciones||'—')}</td></tr>
+    <tr><td colspan="3" style="vertical-align:top"><b>Firma del inspector:</b>${c.firma_img?`<img class="fir" src="${c.firma_img}" alt="Firma" style="height:46px;margin-top:4px">`:'<br>✔ Firmado <small style="color:#666">(registro anterior a la imagen de firma)</small>'}<br><small>${esc(c.inspeccionado_por||'')}</small></td><td colspan="3" style="vertical-align:top">${celdaVobo('FT-17',id,'SS','V°B° S.S.')}</td></tr>
+  </table></div>
+  <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="solo" ${solo17?'checked':''}> Mostrar solo cebaderos con hallazgo (${fl.filter(f=>f.hallazgo==='SÍ').length})</label>
+  <p class="note imp"><b>Leyenda:</b> ${['con','inc','rec'].map(k=>L(LST[k]).map(x=>`${esc(x.c)} = ${esc(x.v)}`).join(', ')).join(' · ')}</p>`;
+  $('#solo').onchange=e=>{solo17=e.target.checked;render()};
+  enlazarVobo();
+  $('#nuevaIns2').onclick=()=>{borrador();pila=['home','ft17','ft17ins'];render()};
+  enlazarAcc({archivo:`FT-17 Cebaderos ${c.fecha}`,
+    eliminar:()=>eliminarReg('FT-17',id,'inspeccion',['home','ft17'],`la inspección de cebaderos del ${c.fecha}`),
+    editar:()=>{if(store.get('ft17_borrador',null))return toast('Primero termina o descarta la inspección en curso',3500);
+      confirmarEdicion('FT-17',id,motivo=>{const b={id,inicio:iso(new Date()),fecha:c.fecha===hoyStr()?null:c.fecha,d:{},obs:c.observaciones||'',edit:motivo};
+        d.filas.forEach(r=>b.d[r.cebadero]={con:r.consumo,inc:r.incidencia,rec:r.recebado,h:r.hora_revision});store.set('ft17_borrador',b);pila=['home','ft17','ft17ins'];render()})}});
+}
+
+/* ---------- escáner QR ---------- */
+let qr=null;
+function numDeQR(t){t=String(t).trim();const m=t.match(/[?&]ceb=(\d+)/i)||t.match(/^(?:CEB[-\s]?)?(\d{1,4})$/i);return m?+m[1]:null}
+async function escanear(){
+  const sh=document.createElement('div');sh.className='sheet';
+  sh.innerHTML=`<div class="in"><b>Apunta al código QR del cebadero</b><div id="reader"></div><label class="f">¿No lee? Escribe el número<input type="number" id="manual" inputmode="numeric" min="1" max="${N('ft17.total')}"></label><button class="btn" id="mOk">Abrir cebadero</button><button class="btn ghost" id="qx">Cerrar</button></div>`;
+  document.body.appendChild(sh);
+  const cerrar=async()=>{try{if(qr){await qr.stop();qr.clear()}}catch(e){}qr=null;sh.remove()};
+  sh.querySelector('#qx').onclick=cerrar;
+  sh.querySelector('#mOk').onclick=async()=>{const n=+sh.querySelector('#manual').value;await cerrar();abrirCeb(n,false)};
+  if(typeof Html5Qrcode==='undefined'){sh.querySelector('#reader').outerHTML='<p class="note">No se pudo cargar el lector de QR. Escribe el número.</p>';return}
+  try{
+    qr=new Html5Qrcode('reader');
+    await qr.start({facingMode:'environment'},{fps:10,qrbox:220},async txt=>{const n=numDeQR(txt);if(!n)return;if(navigator.vibrate)navigator.vibrate(80);await cerrar();abrirCeb(n,true)});
+  }catch(e){sh.querySelector('#reader').outerHTML='<p class="note">No se pudo abrir la cámara. Revisa que el navegador tenga permiso de cámara, o escribe el número.</p>'}
+}
+
+/* ---------- firma y envío ---------- */
+function firmar(){
+  const sh=document.createElement('div');sh.className='sheet';
+  const b=borrador(), nh=Object.values(b.d).filter(hallazgo).length;
+  sh.innerHTML=`<div class="in"><b style="font-size:18px">Firma del inspector</b>
+    <div class="card"><b>${N('ft17.total')} cebaderos revisados</b><br><span class="${nh?'':'note'}" style="${nh?'color:var(--bad)':''}">${nh?`${nh} con hallazgo — se enviará alerta a las responsables del área`:'Sin hallazgos'}</span></div>
+    <canvas class="sig" id="sig"></canvas><small class="note">Firme dentro del recuadro con el dedo</small>
+    <button class="pill" id="borrar" style="align-self:flex-start;cursor:pointer">Borrar firma</button>
+    <button class="btn" id="env">Enviar registro</button><button class="btn ghost" id="fx">Volver</button></div>`;
+  document.body.appendChild(sh);
+  const c=sh.querySelector('#sig');let firmo=false;
+  const prep=()=>{const r=c.getBoundingClientRect();c.width=r.width*2;c.height=r.height*2;const x=c.getContext('2d');x.scale(2,2);x.lineWidth=2.4;x.lineCap='round';x.lineJoin='round';x.strokeStyle='#111';x.fillStyle='#fff';x.fillRect(0,0,r.width,r.height);return x};
+  let x=prep(),dib=false;
+  const pt=e=>{const r=c.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]};
+  c.onpointerdown=e=>{dib=true;c.setPointerCapture(e.pointerId);x.beginPath();x.moveTo(...pt(e))};
+  c.onpointermove=e=>{if(!dib)return;x.lineTo(...pt(e));x.stroke();firmo=true};
+  c.onpointerup=c.onpointercancel=()=>dib=false;
+  sh.querySelector('#borrar').onclick=()=>{x=prep();firmo=false};
+  sh.querySelector('#fx').onclick=()=>sh.remove();
+  sh.querySelector('#env').onclick=async e=>{
+    if(!firmo)return toast('Falta la firma');
+    e.target.disabled=true;e.target.textContent='Enviando…';
+    const p=armarPayload(c.toDataURL('image/png'));p.firmaMini=miniFirma(c);
+    const bb=borrador();if(bb.edit){p.accion='reemplazar';p.motivo=bb.edit}
+    histReemplazar({id:p.cabecera.id_inspeccion,formato:'FT-17',fecha:p.cabecera.fecha,hallazgos:p.cabecera.con_hallazgo,estado:'Pendiente'});
+    store.set('srv_FT-17',(store.get('srv_FT-17',[])).filter(x=>x.id_inspeccion!==p.cabecera.id_inspeccion));
+    guardarDet17(p);
+    const r=await enviarOEncolar(p);
+    toast(r==='prueba'?'Modo prueba: registro simulado como enviado':r==='ok'?'Registro enviado ✓':'Sin conexión: se guardó y se enviará solo cuando haya señal',3200);
+    store.del('ft17_borrador');sh.remove();pila=['home','ft17','ft17dia:'+p.cabecera.id_inspeccion];render();
+  };
+}
+function armarPayload(firma){
+  const b=borrador(),s=sesion(),fin=new Date(),fr=b.fecha?new Date(aD(b.fecha)):fin;
+  const filas=[];for(let i=1;i<=N('ft17.total');i++){const x=b.d[i];filas.push({id_inspeccion:b.id,cebadero:i,zona:zonaDe(i),consumo:x.con,incidencia:x.inc,recebado:x.rec,hora_revision:x.h,hallazgo:hallazgo(x)?'SÍ':'NO'})}
+  const hall=filas.filter(f=>f.hallazgo==='SÍ');
+  return {
+    ...cred(), formato:'FT-17', codigo:F17.codigo, version:F17.version,
+    cabecera:{id_inspeccion:b.id,fecha:fecha(fr),semana:semanaISO(fr),fecha_llenado:iso(fin),inicio:b.inicio,fin:iso(fin),inspeccionado_por:s.usuario,ingrediente_activo:T('ft17.ingrediente'),total_revisados:filas.length,con_hallazgo:hall.length,observaciones:b.obs||'',vb_supervisor:''},
+    filas, firma,
+    alertas:[...hall.map(f=>`Cebadero ${f.cebadero} (${f.zona}): consumo ${f.consumo}, incidencia ${f.incidencia}`)]
+  };
+}
+
+/* ===================== firma reutilizable ===================== */
+function padFirma(c){
+  let firmo=false,dib=false,x;
+  const prep=()=>{const r=c.getBoundingClientRect();c.width=r.width*2;c.height=r.height*2;x=c.getContext('2d');x.scale(2,2);x.lineWidth=2.4;x.lineCap='round';x.lineJoin='round';x.strokeStyle='#111';x.fillStyle='#fff';x.fillRect(0,0,r.width,r.height);firmo=false};
+  prep();
+  const pt=e=>{const r=c.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]};
+  c.onpointerdown=e=>{dib=true;c.setPointerCapture(e.pointerId);x.beginPath();x.moveTo(...pt(e))};
+  c.onpointermove=e=>{if(!dib)return;x.lineTo(...pt(e));x.stroke();firmo=true};
+  c.onpointerup=c.onpointercancel=()=>dib=false;
+  return {limpiar:prep,firmo:()=>firmo,png:()=>c.toDataURL('image/png')};
+}
+
+/* ===================== FECHA DEL REGISTRO ===================== */
+// Al registrar se puede elegir cualquier fecha (hoy o anterior). Por defecto es hoy.
+const aISO=f=>{const m=String(f).match(/(\d+)\/(\d+)\/(\d+)/);return m?`${m[3]}-${pad(m[2])}-${pad(m[1])}`:''};
+const deISO=v=>{const [y,m,d]=v.split('-');return `${d}/${m}/${y}`};
+const campoFecha=(id,f)=>`<label class="f">Fecha del registro<input type="date" id="${id}" max="${aISO(hoyStr())}" value="${aISO(f||hoyStr())}"></label>`;
+function leerFecha(id){const v=$(id).value;if(!v)return null;const f=deISO(v);return aD(f)>aD(hoyStr())?null:f}
+
+/* ===================== MOTOR GENÉRICO DE REGISTROS (FT-07, FT-14, FT-18, FT-19) =====================
+   Cada módulo se define abajo en MODS: de qué lista salen las filas, qué se marca en cada fila,
+   cuándo es hallazgo y qué columnas lleva el formato. El resto (historial por fecha, elegir fecha,
+   firma, V°B°, envío sin señal, vista tipo formato) es igual para todos. */
+const nomDe=(lista,c)=>{const x=L(lista).find(z=>z.c===c);return x?x.v:c};
+const SN=()=>[['C','✓ Conforme',0],['NC','✗ No conforme',1]];
+const MODS={
+  'FT-14':{titulo:'Control de lentes',doc:'REGISTRO DE CONTROL DE LENTES',sub:'Diario · al ingresar a sala de proceso',prellenar:true,
+    filas:()=>L('ft14.personal').map(x=>({item:x.v+'|'+x.c,descripcion:x.v,detalle:nomDe('ft14.areas',x.c),area:x.c})),
+    agregar:{boton:'+ Agregar persona',campos:[{id:'n',label:'Nombres y apellidos'},{id:'area',label:'Área',opc:()=>L('ft14.areas').map(x=>[x.c,`${x.c} · ${x.v}`])}],
+      fila:v=>({item:v.n+'|'+v.area,descripcion:v.n,detalle:nomDe('ft14.areas',v.area),area:v.area})},
+    campos:[{id:'inicio',label:'Inicio',opc:SN,def:'C'},{id:'final',label:'Final',opc:SN,def:'C'}],
+    obsReq:r=>r.inicio==='NC'||r.final==='NC',
+    cols:()=>[['Ítem',(r,i)=>i+1,'c'],['Nombres y apellidos',r=>r.descripcion],['Área',r=>r.area,'c'],['Control inicio',r=>r.inicio==='NC'?'✗':'✓','c'],['Control final',r=>r.final==='NC'?'✗':'✓','c'],['Observaciones / medidas correctivas',r=>r.observacion]],
+    leyenda:()=>'Control: ✓ Conforme · ✗ No conforme. El control se realiza diariamente al ingresar a sala de proceso. Áreas: '+L('ft14.areas').map(x=>`${x.c} = ${x.v}`).join(', '),
+    vacio:'Aún no hay personal cargado. Agrégalo aquí con "+ Agregar persona" o en ⚙ Administrar listas → FT-14 → Personal que usa lentes.'},
+
+  'FT-18':{titulo:'Trampas mecánicas',doc:'REGISTRO DE CONTROL DE TRAMPAS MECÁNICAS',sub:'Diario · captura por trampa',
+    filas:()=>L('ft18.trampas').map(x=>({item:x.c,descripcion:'Trampa N° '+x.c,detalle:nomDe('ft18.areas',x.v),area:x.v})),
+    campos:[{id:'estado',label:'Estado',opc:()=>[['A','Activa',0],['NA','No activa',0]],def:'A'},
+            {id:'captura',label:'Captura',opc:()=>[['NO','– Sin captura',0],['SI','✓ Con captura',1]],def:'NO',si:r=>r.estado!=='NA'}],
+    obsReq:()=>false,
+    cols:()=>[['N° trampa',r=>r.item,'c'],['Área',r=>r.area,'c'],['Estado',r=>r.estado==='NA'?'No activa':'Activa','c'],['Captura',r=>r.estado==='NA'?'—':r.captura==='SI'?'✓':'–','c'],['Observaciones',r=>r.observacion]],
+    leyenda:()=>'Captura: ✓ con captura · – sin captura. Áreas: '+L('ft18.areas').map(x=>`${x.c} = ${x.v}`).join(', ')},
+
+  'FT-19':{titulo:'Insectocutores',doc:'REGISTRO DE INSPECCIÓN DE TRAMPAS DE INSECTOS',sub:'Estado diario · conteo semanal',conteo:true,
+    filas:()=>L('ft19.sectores').map(x=>({item:x.c,descripcion:'Insectocutor N° '+x.c,detalle:x.v,sector:x.v})),
+    campos:[{id:'estado',label:'Estado',opc:()=>L('ft19.estado').map(x=>[x.c,x.v,x.a?1:0]),def:()=>(L('ft19.estado')[0]||{}).c}],
+    obsReq:r=>(CAT['ft19.estado']?.items||[]).some(x=>x.c===r.estado&&x.a),
+    cols:cab=>[['N°',r=>r.item,'c'],['Sector',r=>r.sector],['Estado',r=>r.estado,'c'],
+      ...(cab.conteo==='SÍ'?[...L('ft19.especies').map(e=>[e.c.slice(0,6),r=>r[e.c]||0,'c']),['Total',r=>r.total||0,'c']]:[]),['Observaciones',r=>r.observacion]],
+    leyenda:cab=>`Estado: ${L('ft19.estado').map(x=>`${x.c} = ${x.v}`).join(', ')}. Frecuencia: verificación del estado diaria; conteo de insectos semanal.`+(cab.conteo==='SÍ'?` No conforme: trampa ≥ ${N('ft19.limTrampa')}, especie ≥ ${N('ft19.limEspecie')}, total ≥ ${N('ft19.limTotal')} insectos.`:'')},
+
+  'FT-07':{titulo:'Hermeticidad y aves',doc:'VERIFICACIÓN DE HERMETICIDAD, INFRAESTRUCTURA Y MONITOREO DE AVES',sub:'Infraestructura por área',
+    filas:()=>L('ft07.areas').map(x=>({item:x.v+'|'+x.c,descripcion:x.v,detalle:`${x.c} · ${x.e}`,localizacion:x.c,aspecto:x.e,frecuencia:x.f||'Diario',aves:x.a?'SÍ':'NO'})),
+    campos:[{id:'verificacion',label:'Verificación',opc:()=>[['C','✓ Conforme',0],['NC','✗ No conforme',1],['NT','No toca hoy',0]],def:'C'},
+            {id:'aves_incidencia',label:'Aves: incidencia',opc:()=>[['NO','Sin incidencia',0],['SI','Con incidencia',1]],def:'NO',si:r=>r.aves==='SÍ'},
+            {id:'aves_cambio',label:'Aves: cambio',opc:()=>[['NO','No',0],['SI','Sí',0]],def:'NO',si:r=>r.aves==='SÍ'}],
+    obsReq:r=>r.verificacion==='NC'||r.aves_incidencia==='SI',
+    cols:()=>[['Área',r=>r.descripcion],['Loc.',r=>r.localizacion,'c'],['Aspecto a considerar',r=>r.aspecto],['Frecuencia',r=>r.frecuencia,'c'],
+      ['Verificación',r=>({C:'Conf.',NC:'No conf.',NT:'No toca'})[r.verificacion]||'','c'],['Aves: incidencia',r=>r.aves==='SÍ'?(r.aves_incidencia==='SI'?'Sí':'No'):'—','c'],['Aves: cambio',r=>r.aves==='SÍ'?(r.aves_cambio==='SI'?'Sí':'No'):'—','c'],['Observaciones / acción correctiva',r=>r.observacion]],
+    leyenda:()=>'Localización: '+L('ft07.localizacion').map(x=>`${x.c} = ${x.v}`).join(', ')}
+};
+const MODLIST=['FT-07','FT-14','FT-18','FT-19'];
+const FM=f=>C.formatos[f];
+const valDef=c=>typeof c.def==='function'?c.def():c.def;
+const aplica=(c,r)=>!c.si||c.si(r);
+function filaPlana(M,base,d){const r={...base,...(d||{})};M.campos.forEach(c=>{if(!aplica(c,r))delete r[c.id]});return r}
+function esHall(M,r,lim){return M.campos.some(c=>aplica(c,r)&&(c.opc().find(o=>o[0]===r[c.id])||[])[2])||(lim&&r.total>=N('ft19.limTrampa'))}
+function filaCompleta(M,r){return M.campos.every(c=>!aplica(c,r)||r[c.id])}
+
+function borMod(f){return store.get('bor_'+f,null)}
+function nuevoBor(f){const M=MODS[f],d=new Date(),b={id:f.replace('-','')+'-'+d.getTime().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,5).toUpperCase(),inicio:iso(d),fecha:null,d:{},extra:[],obs:'',conteo:false};
+  if(M.prellenar)M.filas().forEach(base=>{const v={};M.campos.forEach(c=>{if(aplica(c,{...base,...v}))v[c.id]=valDef(c)});b.d[base.item]=v});
+  store.set('bor_'+f,b);return b}
+const filasBor=(f,b)=>[...MODS[f].filas(),...(b.extra||[])];
+
+// ---------- inicio del módulo: botón + historial por fecha ----------
+function insMod(f){
+  const det=store.get('det_'+f,{}),m={};
+  (store.get('srv_'+f,[])).forEach(c=>m[c.id_inspeccion]={id:c.id_inspeccion,fecha:c.fecha,insp:c.inspeccionado_por,hall:+c.con_hallazgo||0,estado:'Enviado'});
+  store.get('historial',[]).filter(x=>x.formato===f).forEach(x=>{const c=(det[x.id]||{}).cab||{};const sv=m[x.id]||{};m[x.id]={...sv,id:x.id,fecha:x.fecha,insp:c.inspeccionado_por||sv.insp,hall:x.hallazgos,estado:sv.estado==='Enviado'?'Enviado':x.estado}});
+  return Object.values(m).sort((a,b)=>(aD(b.fecha)-aD(a.fecha))||String(b.id).localeCompare(String(a.id)));
+}
+function mod(f){
+  const M=MODS[f];cab(M.titulo,`${FM(f).codigo} · V${FM(f).version}`);refrescar(f);
+  const b=borMod(f),lista=insMod(f);
+  $('#scr').innerHTML=`
+  ${b?`<button class="btn" id="mCont">▶ Continuar registro del ${esc(b.fecha||hoyStr())}</button>`:`<button class="btn" id="mNuevo">+ Registrar</button>`}
+  <p class="note">Dentro del registro puedes elegir la fecha (por defecto, hoy).</p>
+  <p class="h">Historial por fecha</p>
+  ${lista.length?lista.map(x=>`<div class="diaw"><button class="dia" data-id="${esc(x.id)}">${calendario(x.fecha)}<span class="tx"><b>${esc(x.fecha)}</b><small>${esc(x.insp||'')}</small></span><span style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${x.hall?`<span class="pill bad">${x.hall} hallazgo(s)</span>`:'<span class="pill ok">Conforme</span>'}${vobo(f,x.id,'SS')?'<span class="pill ok">V°B° ✓</span>':''}${x.estado!=='Enviado'?'<span class="pill warn">Por enviar</span>':''}</span></button>${btnDel(x.id,x.fecha)}</div>`).join(''):'<p class="note">Aún no hay registros.</p>'}`;
+  if(b)$('#mCont').onclick=()=>ir('modIns:'+f);else $('#mNuevo').onclick=()=>{nuevoBor(f);ir('modIns:'+f)};
+  $('#scr').querySelectorAll('[data-id]').forEach(e=>e.onclick=()=>ir('modDia:'+f+'|'+e.dataset.id));
+  $('#scr').querySelectorAll('[data-idel]').forEach(e=>e.onclick=()=>eliminarReg(f,e.dataset.idel,'inspeccion',['home','mod:'+f],`el registro de ${M.titulo.toLowerCase()} del ${e.dataset.fecha}`));
+}
+
+// ---------- llenado ----------
+function conteos19(fs,b){
+  const esp=L('ft19.especies'),porEsp={};let tot=0;
+  fs.forEach(r=>{let t=0;esp.forEach(e=>{const n=+((b.d[r.item]||{}).cnt||{})[e.c]||0;t+=n;porEsp[e.c]=(porEsp[e.c]||0)+n});r._tot=t;tot+=t});
+  const al=[];fs.forEach(r=>{if(r._tot>=N('ft19.limTrampa'))al.push(`${r.descripcion} (${r.detalle}): ${r._tot} insectos (límite ${N('ft19.limTrampa')})`)});
+  esp.forEach(e=>{if(porEsp[e.c]>=N('ft19.limEspecie'))al.push(`${e.c}: ${porEsp[e.c]} (límite ${N('ft19.limEspecie')} por especie)`)});
+  if(tot>=N('ft19.limTotal'))al.push(`Total de la inspección: ${tot} (límite ${N('ft19.limTotal')})`);
+  return {tot,porEsp,al};
+}
+function modIns(f){
+  const M=MODS[f];let b=borMod(f)||nuevoBor(f);
+  cab(M.titulo,`${FM(f).codigo} · V${FM(f).version} · ${b.fecha||hoyStr()}`);
+  const fs=filasBor(f,b);
+  const listo=fs.filter(x=>filaCompleta(M,{...x,...(b.d[x.item]||{})})).length;
+  const nh=fs.filter(x=>esHall(M,{...x,...(b.d[x.item]||{})})).length;
+  const cnt=M.conteo&&b.conteo?conteos19(fs,b):null;
+  const seg=(c,r,k)=>`<div class="seg" data-k="${esc(k)}" data-c="${c.id}">${c.opc().map(o=>`<button type="button" data-v="${esc(o[0])}" class="${r[c.id]===o[0]?'on':''} ${o[2]?'badopt':''}">${esc(o[1])}</button>`).join('')}</div>`;
+  $('#scr').innerHTML=`
+  ${b.edit?'<div class="banner warn"><b>Editando un registro ya enviado.</b> Al enviarlo reemplazará al anterior.</div>':''}
+  ${campoFecha('mF',b.fecha)}
+  <div class="card"><div class="row" style="margin-bottom:6px"><b>${listo} de ${fs.length} completos</b>${nh?`<span class="pill bad">${nh} con hallazgo</span>`:''}</div><div class="prog"><i style="width:${fs.length?listo/fs.length*100:0}%"></i></div></div>
+  ${M.conteo?`<label class="card" style="display:flex;gap:10px;align-items:center;cursor:pointer"><input type="checkbox" id="mCnt" style="width:22px;height:22px" ${b.conteo?'checked':''}> <span><b>Incluir conteo de insectos</b><br><small class="note">Semanal: se cuenta por especie en cada trampa.</small></span></label>`:''}
+  ${cnt?`<div class="card"><b>Total capturado: <span class="mono">${cnt.tot}</span></b> ${cnt.al.length?'<span class="pill bad">No conforme</span>':'<span class="pill ok">Conforme</span>'}${cnt.al.length?`<ul style="margin:8px 0 0;padding-left:18px;color:var(--bad);font-size:14px">${cnt.al.map(a=>`<li>${esc(a)}</li>`).join('')}</ul>`:''}</div>`:''}
+  ${M.prellenar?'':`<button class="btn ghost" id="mDef">Completar pendientes como conformes</button>`}
+  ${fs.length?'':`<div class="banner warn">${esc(M.vacio||'La lista de este registro está vacía. Cárgala en ⚙ Administrar listas.')}</div>`}
+  ${fs.map(x=>{const r={...x,...(b.d[x.item]||{})},h=esHall(M,r)||(cnt&&x._tot>=N('ft19.limTrampa'));const ob=M.obsReq(r);
+    return `<div class="card" data-row="${esc(x.item)}" style="display:flex;flex-direction:column;gap:8px;${h?'border-color:var(--bad)':''}">
+      <div class="row"><span><b>${esc(x.descripcion)}</b><br><small class="note">${esc(x.detalle||'')}</small></span>${x.frecuencia?`<span class="pill">${esc(x.frecuencia)}</span>`:''}${filaCompleta(M,r)?'':'<span class="pill warn">Pendiente</span>'}</div>
+      ${M.campos.filter(c=>aplica(c,r)).map(c=>`<div><small class="note">${esc(c.label)}</small>${seg(c,r,x.item)}</div>`).join('')}
+      ${cnt?`<details open><summary style="cursor:pointer"><b>Conteo</b> <span class="pill ${x._tot>=N('ft19.limTrampa')?'bad':''}">${x._tot}</span></summary>${L('ft19.especies').map(e=>`<div class="sp"><span>${esc(e.c)}<br><small class="note">${esc(e.v)}</small></span><input type="number" min="0" inputmode="numeric" data-cnt="${esc(x.item)}|${esc(e.c)}" value="${(r.cnt||{})[e.c]||''}" placeholder="0" style="width:80px;text-align:center"></div>`).join('')}</details>`:''}
+      ${ob||r.obs?`<label class="f">Observación / medida correctiva${ob?' (obligatoria)':''}<textarea data-obs="${esc(x.item)}">${esc(r.obs||'')}</textarea></label>`:`<button class="pill" data-addobs="${esc(x.item)}" style="align-self:flex-start;cursor:pointer">+ Observación</button>`}
+    </div>`}).join('')}
+  ${M.agregar?`<button class="btn ghost" id="mAdd">${esc(M.agregar.boton)}</button>`:''}
+  <label class="f">Observaciones generales${cnt&&cnt.al.length?' / acción correctiva (obligatoria por superar límites)':''}<textarea id="mObs">${esc(b.obs||'')}</textarea></label>
+  <button class="btn" id="mFin">Terminar y firmar</button>
+  <button class="btn ghost" id="mDesc">Descartar este registro</button>`;
+  const guardar=()=>store.set('bor_'+f,b);
+  $('#mF').onchange=()=>{const v=leerFecha('#mF');if(!v){toast('La fecha no puede ser posterior a hoy');$('#mF').value=aISO(b.fecha||hoyStr());return}b.fecha=v===hoyStr()?null:v;guardar();cab(M.titulo,`${FM(f).codigo} · V${FM(f).version} · ${v}`)};
+  $('#scr').querySelectorAll('.seg[data-k]').forEach(sg=>sg.onclick=e=>{const o=e.target.closest('button');if(!o)return;const k=sg.dataset.k;b.d[k]=b.d[k]||{};b.d[k][sg.dataset.c]=o.dataset.v;guardar();render()});
+  $('#scr').querySelectorAll('[data-obs]').forEach(t=>t.oninput=()=>{const k=t.dataset.obs;b.d[k]=b.d[k]||{};b.d[k].obs=t.value;guardar()});
+  $('#scr').querySelectorAll('[data-addobs]').forEach(x=>x.onclick=()=>{const k=x.dataset.addobs;b.d[k]=b.d[k]||{};b.d[k].obs=' ';guardar();render();const t=$('#scr').querySelector(`[data-obs="${CSS.escape(k)}"]`);if(t){t.value='';t.focus()}});
+  $('#scr').querySelectorAll('[data-cnt]').forEach(t=>t.onchange=()=>{const [k,e]=t.dataset.cnt.split('|');b.d[k]=b.d[k]||{};b.d[k].cnt=b.d[k].cnt||{};b.d[k].cnt[e]=Math.max(0,+t.value||0);guardar();render()});
+  if($('#mCnt'))$('#mCnt').onchange=e=>{b.conteo=e.target.checked;guardar();render()};
+  $('#mObs').oninput=e=>{b.obs=e.target.value;guardar()};
+  if($('#mDef'))$('#mDef').onclick=()=>{let k=0;fs.forEach(x=>{const v=b.d[x.item]=b.d[x.item]||{};M.campos.forEach(c=>{if(aplica(c,{...x,...v})&&!v[c.id]){v[c.id]=valDef(c);k++}})});guardar();toast(k?'Pendientes completados':'No había pendientes');render()};
+  if($('#mAdd'))$('#mAdd').onclick=()=>agregarFila(f,b);
+  $('#mDesc').onclick=()=>confirmar('¿Descartar este registro? Se borra lo marcado.',()=>{store.del('bor_'+f);pila=['home','mod:'+f];render()});
+  $('#mFin').onclick=()=>{
+    const falt=fs.filter(x=>!filaCompleta(M,{...x,...(b.d[x.item]||{})})).length;if(falt)return toast(`Faltan ${falt} fila(s) por completar`);
+    const sinObs=fs.filter(x=>{const r={...x,...(b.d[x.item]||{})};return M.obsReq(r)&&!(r.obs||'').trim()});if(sinObs.length)return toast(`Falta la observación en: ${sinObs.map(x=>x.descripcion).slice(0,3).join(', ')}`,3500);
+    if(cnt&&cnt.al.length&&!(b.obs||'').trim())return toast('Escribe la acción correctiva en observaciones generales');
+    if(!fs.length)return toast('No hay filas para registrar');
+    firmarMod(f);
+  };
+}
+function agregarFila(f,b){
+  const A=MODS[f].agregar,sh=document.createElement('div');sh.className='sheet';
+  sh.innerHTML=`<div class="in"><b style="font-size:18px">${esc(A.boton.replace('+ ',''))}</b>${A.campos.map(c=>`<label class="f">${esc(c.label)}${c.opc?`<select data-a="${c.id}">${c.opc().map(o=>`<option value="${esc(o[0])}">${esc(o[1])}</option>`).join('')}</select>`:`<input type="text" data-a="${c.id}">`}</label>`).join('')}
+    <p class="note">Solo se agrega a este registro. Para que salga siempre, agrégalo en ⚙ Administrar listas.</p><button class="btn" id="aOk">Agregar</button><button class="btn ghost" id="aNo">Cancelar</button></div>`;
+  document.body.appendChild(sh);sh.querySelector('#aNo').onclick=()=>sh.remove();
+  sh.querySelector('#aOk').onclick=()=>{const v={};sh.querySelectorAll('[data-a]').forEach(i=>v[i.dataset.a]=i.value.trim());if(Object.values(v).some(x=>!x))return toast('Completa los datos');
+    const fila=A.fila(v);if(filasBor(f,b).some(x=>x.item===fila.item))return toast('Ya está en la lista');
+    b.extra=[...(b.extra||[]),fila];const M=MODS[f];if(M.prellenar){const d={};M.campos.forEach(c=>d[c.id]=valDef(c));b.d[fila.item]=d}store.set('bor_'+f,b);sh.remove();render()};
+}
+
+// ---------- firma y envío ----------
+function firmarMod(f){
+  const M=MODS[f],b=borMod(f),fs=filasBor(f,b),cnt=M.conteo&&b.conteo?conteos19(fs,b):null;
+  const filas=fs.map((x,i)=>{const d=b.d[x.item]||{},r=filaPlana(M,x,d);delete r.obs;delete r.cnt;delete r._tot;r.observacion=(d.obs||'').trim();
+    if(cnt){L('ft19.especies').forEach(e=>r[e.c]=+((d.cnt||{})[e.c])||0);r.total=x._tot}
+    r.hallazgo=esHall(M,r,!!cnt)?'SÍ':'NO';return {id_inspeccion:b.id,orden:i+1,...r}});
+  const nh=filas.filter(r=>r.hallazgo==='SÍ').length+(cnt&&cnt.al.length&&!filas.some(r=>r.hallazgo==='SÍ')?1:0);
+  const sh=document.createElement('div');sh.className='sheet';
+  sh.innerHTML=`<div class="in"><b style="font-size:18px">Firma del inspector</b>
+    <div class="card"><b>${filas.length} fila(s) registradas · ${esc(b.fecha||hoyStr())}</b><br><span class="${nh?'':'note'}" style="${nh?'color:var(--bad)':''}">${nh?'Con hallazgos — se enviará alerta a las responsables del área':'Sin hallazgos'}</span></div>
+    <canvas class="sig" id="mSig"></canvas><small class="note">Firme dentro del recuadro con el dedo</small><button class="pill" id="mBor" style="align-self:flex-start;cursor:pointer">Borrar firma</button>
+    <button class="btn" id="mEnv">Enviar registro</button><button class="btn ghost" id="mVol">Volver</button></div>`;
+  document.body.appendChild(sh);
+  const pad=padFirma(sh.querySelector('#mSig'));sh.querySelector('#mBor').onclick=pad.limpiar;sh.querySelector('#mVol').onclick=()=>sh.remove();
+  sh.querySelector('#mEnv').onclick=async e=>{
+    if(!pad.firmo())return toast('Falta la firma');e.target.disabled=true;e.target.textContent='Enviando…';
+    const s=sesion(),fin=new Date(),fr=b.fecha?new Date(aD(b.fecha)):fin,mini=miniFirma(sh.querySelector('#mSig'));
+    const cabe={id_inspeccion:b.id,fecha:fecha(fr),semana:semanaISO(fr),fecha_llenado:iso(fin),inspeccionado_por:s.usuario,total_items:filas.length,con_hallazgo:filas.filter(r=>r.hallazgo==='SÍ').length,conteo:cnt?'SÍ':'NO',total_insectos:cnt?cnt.tot:'',observaciones:b.obs||''};
+    const alertas=[...filas.filter(r=>r.hallazgo==='SÍ').map(r=>`${r.descripcion}${r.detalle?' ('+r.detalle+')':''}: ${M.campos.filter(c=>r[c.id]&&(c.opc().find(o=>o[0]===r[c.id])||[])[2]).map(c=>c.label+' '+(c.opc().find(o=>o[0]===r[c.id])||[])[1]).join(', ')||'límite de conteo superado'}${r.observacion?' — '+r.observacion:''}`),...(cnt?cnt.al.filter(a=>!/^Insectocutor/.test(a)):[])];
+    const p={...cred(),formato:f,codigo:FM(f).codigo,version:FM(f).version,cabecera:cabe,filas,firma:pad.png(),firmaMini:mini,alertas};
+    if(b.edit){p.accion='reemplazar';p.motivo=b.edit;store.set('srv_'+f,(store.get('srv_'+f,[])).filter(x=>x.id_inspeccion!==b.id))}
+    const det=store.get('det_'+f,{});det[b.id]={cab:{...cabe,firma_img:mini},filas};const ks=Object.keys(det);while(ks.length>8)delete det[ks.shift()];store.set('det_'+f,det);
+    histReemplazar({id:b.id,formato:f,fecha:cabe.fecha,hallazgos:cabe.con_hallazgo,estado:'Pendiente'});
+    const r=await enviarOEncolar(p);
+    toast(r==='prueba'?'Modo prueba: registro simulado como enviado':r==='ok'?'Registro enviado ✓':'Sin conexión: se guardó y se enviará solo cuando haya señal',3200);
+    store.del('bor_'+f);sh.remove();pila=['home','mod:'+f,'modDia:'+f+'|'+b.id];render();
+  };
+}
+
+// ---------- vista tipo formato ----------
+async function modDia(prm){
+  const [f,id]=prm.split('|'),M=MODS[f];
+  cab(M.titulo,`${FM(f).codigo} · V${FM(f).version}`);
+  let d=store.get('det_'+f,{})[id];
+  if(!d){
+    $('#scr').innerHTML='<p class="note">Cargando registro…</p>';
+    if(MODO_PRUEBA||!navigator.onLine){$('#scr').innerHTML='<p class="note">Este registro no está guardado en este equipo. Se necesita señal para verlo.</p>';return}
+    try{const r=await fetch(C.APPS_SCRIPT_URL+'?accion=detalle&formato='+f+'&id='+encodeURIComponent(id)+credQS());const j=await r.json();
+      d={cab:(store.get('srv_'+f,[])).find(x=>x.id_inspeccion===id)||{},filas:(j.filas||[]).sort((a,b)=>(+a.orden||0)-(+b.orden||0))};const dd=store.get('det_'+f,{});dd[id]=d;const ks=Object.keys(dd);while(ks.length>8)delete dd[ks.shift()];store.set('det_'+f,dd)}
+    catch(e){$('#scr').innerHTML='<p class="note">No se pudo cargar el registro. Revisa la señal.</p>';return}
+    if(vista()!=='modDia:'+prm)return;
+  }
+  const c=d.cab,cols=M.cols(c),n=cols.length;
+  $('#scr').innerHTML=`
+  <button class="btn" id="mN">${borMod(f)?'▶ Continuar registro en curso':'+ Registrar'}</button>
+  ${barraAcc({editar:1,eliminar:1})}
+  <div class="fmtwrap"><table class="fmt" style="min-width:${Math.max(380,n*95)}px">
+    <tr><td class="tit" colspan="${Math.max(1,n-2)}" style="text-align:left"><img class="flogo" src="logo_pdc.png" alt="">${esc(C.empresa)}<br>${esc(M.doc)}</td><td class="meta" colspan="2">Código: ${FM(f).codigo}<br>Fecha: ${FM(f).fecha||''}<br>Versión: ${FM(f).version}</td></tr>
+    <tr><td colspan="${Math.ceil(n/2)}"><b>FECHA:</b> ${esc(c.fecha||'')}</td><td colspan="${Math.floor(n/2)}"><b>INSPECCIONADO POR:</b> ${esc(c.inspeccionado_por||'')}</td></tr>
+    <tr>${cols.map(x=>`<th>${esc(x[0])}</th>`).join('')}</tr>
+    ${d.filas.map((r,i)=>`<tr class="${r.hallazgo==='SÍ'?'nc':''}">${cols.map(x=>`<td class="${x[2]||''}">${esc(x[1](r,i))}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${n}">Sin filas</td></tr>`}
+    ${c.conteo==='SÍ'?`<tr><td colspan="${n}"><b>Total de insectos capturados:</b> ${esc(c.total_insectos)}</td></tr>`:''}
+    <tr><td colspan="${n}"><b>Observaciones${c.conteo==='SÍ'?' / acciones correctivas':''}:</b> ${esc(c.observaciones||'—')}</td></tr>
+    <tr><td colspan="${Math.ceil(n/2)}" style="vertical-align:top"><b>Firma del inspector:</b>${c.firma_img?`<img class="fir" src="${c.firma_img}" alt="Firma" style="height:46px;margin-top:4px">`:'<br>✔ Firmado'}<br><small>${esc(c.inspeccionado_por||'')}</small></td><td colspan="${Math.floor(n/2)}" style="vertical-align:top">${celdaVobo(f,id,'SS','V°B° S.S.')}</td></tr>
+  </table></div>
+  <p class="note imp"><b>Leyenda:</b> ${esc(M.leyenda(c))}</p>
+  <p class="note">Las filas en rojo tienen hallazgo o no conformidad. Desliza la tabla hacia los lados si no entra completa.</p>`;
+  $('#mN').onclick=()=>{if(!borMod(f))nuevoBor(f);pila=['home','mod:'+f,'modIns:'+f];render()};
+  enlazarVobo();
+  enlazarAcc({archivo:`${f} ${M.titulo} ${c.fecha||''}`,
+    eliminar:()=>eliminarReg(f,id,'inspeccion',['home','mod:'+f],`el registro de ${M.titulo.toLowerCase()} del ${c.fecha}`),
+    editar:()=>{if(borMod(f))return toast('Primero termina o descarta el registro en curso',3500);
+      confirmarEdicion(f,id,motivo=>{
+        const base=new Set(M.filas().map(x=>x.item)),esp=L('ft19.especies').map(e=>e.c);
+        const b={id,inicio:iso(new Date()),fecha:c.fecha===hoyStr()?null:c.fecha,d:{},extra:[],obs:c.observaciones||'',conteo:c.conteo==='SÍ',edit:motivo};
+        d.filas.forEach(r=>{const v={};M.campos.forEach(k=>{if(r[k.id])v[k.id]=r[k.id]});if(r.observacion)v.obs=r.observacion;if(c.conteo==='SÍ'){v.cnt={};esp.forEach(e=>{if(+r[e])v.cnt[e]=+r[e]})}b.d[r.item]=v;
+          if(!base.has(r.item)){const x={...r};['id_inspeccion','orden','observacion','hallazgo','total',...esp,...M.campos.map(k=>k.id)].forEach(k=>delete x[k]);b.extra.push(x)}});
+        store.set('bor_'+f,b);pila=['home','mod:'+f,'modIns:'+f];render()})}});
+}
+
+/* ===================== DESCARGAR · EDITAR · ELIMINAR ===================== */
+// Barra de acciones de cada registro. Editar y eliminar requieren el permiso "Editar y eliminar registros".
+function barraAcc(o){
+  return `<div class="acc">
+    <button type="button" id="aXls">${svg('<path d="M12 3v12M7 10l5 5 5-5M4 19h16"/>')} Excel</button>
+    <button type="button" id="aPdf">${svg('<path d="M6 9V3h12v6M6 18H4v-6h16v6h-2M7 14h10v7H7z"/>')} PDF</button>
+    ${o.editar&&puede('EDITAR')?`<button type="button" id="aEdit">${svg('<path d="M4 20h4L19 9l-4-4L4 16z"/>')} Editar</button>`:''}
+    ${o.eliminar&&puede('EDITAR')?`<button type="button" id="aDel" class="del">${svg('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>')} Eliminar</button>`:''}
+  </div>`;
+}
+function enlazarAcc(o){
+  const on=(id,f)=>{const e=$(id);if(e)e.onclick=f};
+  on('#aXls',()=>descargarExcel(o.archivo));
+  on('#aPdf',()=>{toast('En la ventana de impresión elige "Guardar como PDF"',3500);setTimeout(()=>window.print(),400)});
+  on('#aEdit',o.editar);on('#aDel',o.eliminar);
+}
+let xlsxCarga=null;
+function cargarXLSX(){return xlsxCarga||(xlsxCarga=new Promise((ok,no)=>{if(window.XLSX)return ok();const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';sc.onload=ok;sc.onerror=()=>{xlsxCarga=null;no()};document.head.appendChild(sc)}))}
+async function descargarExcel(nombre){
+  const t=$('.fmtwrap table');if(!t)return;
+  const cl=t.cloneNode(true);
+  cl.querySelectorAll('.noexp,button').forEach(e=>e.remove());
+  cl.querySelectorAll('img').forEach(i=>i.replaceWith(document.createTextNode(i.classList.contains('flogo')?'':'(firmado)')));
+  try{await cargarXLSX();
+    const wb=XLSX.utils.table_to_book(cl,{sheet:'Registro',raw:true});
+    const ws=wb.Sheets['Registro'];ws['!cols']=Array.from({length:12},(_,i)=>({wch:i===1||i===2?28:14}));
+    XLSX.writeFile(wb,nombre.replace(/[\\/:*?"<>|]/g,'-')+'.xlsx');toast('Excel descargado ✓');
+  }catch(e){
+    // sin conexión al CDN: se descarga una versión .xls que Excel también abre
+    const html=`<html><head><meta charset="utf-8"></head><body>${cl.outerHTML}</body></html>`;
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+html],{type:'application/vnd.ms-excel'}));a.download=nombre.replace(/[\\/:*?"<>|]/g,'-')+'.xls';a.rel='noopener';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);toast('Descargado ✓');
+  }
+}
+// Pide confirmación y motivo (queda en la hoja "Eliminados" / "Ediciones")
+function pedirMotivo(titulo,texto,boton,peligro,cb){
+  const sh=document.createElement('div');sh.className='sheet';
+  sh.innerHTML=`<div class="in"><b style="font-size:18px">${esc(titulo)}</b><p class="note" style="font-size:14px">${texto}</p>
+    <label class="f">Motivo (obligatorio)<textarea id="moT" placeholder="Ej.: se registró por error, dato equivocado…"></textarea></label>
+    <button class="btn" id="moOk" ${peligro?'style="background:var(--bad);border-color:var(--bad);color:#fff"':''}>${esc(boton)}</button><button class="btn ghost" id="moNo">Cancelar</button></div>`;
+  document.body.appendChild(sh);sh.querySelector('#moNo').onclick=()=>sh.remove();
+  sh.querySelector('#moOk').onclick=()=>{const m=sh.querySelector('#moT').value.trim();if(m.length<4)return toast('Escribe el motivo');sh.remove();cb(m)};
+}
+// Si el registro todavía no se envió (está en la cola), se quita de la cola en vez de pedir al servidor
+function quitarDeCola(id){const q=store.get('cola',[]);const n=q.filter(p=>((p.cabecera||{}).id_inspeccion||(p.registro||{}).id||(p.actualizar||{}).id)!==id);const habia=n.length!==q.length;store.set('cola',n);pintarRed();return habia}
+function limpiarLocal(f,id){
+  store.set('historial',store.get('historial',[]).filter(x=>x.id!==id));
+  ['det_'+f,'ft17_det'].forEach(k=>{const d=store.get(k,null);if(d&&d[id]){delete d[id];store.set(k,d)}});
+  store.set('srv_'+f,(store.get('srv_'+f,[])).filter(x=>x.id_inspeccion!==id&&x.id!==id));
+  store.set('visitas',store.get('visitas',[]).filter(x=>x.id!==id));
+  store.set('vobo_local',store.get('vobo_local',[]).filter(x=>!(x.formato===f&&String(x.clave)===String(id))));
+  store.set('srvvb_'+f,(store.get('srvvb_'+f,[])).filter(x=>String(x.clave)!==String(id)));
+}
+// FT-20: elimina todas las visitas de una fecha (también las registradas antes de esta versión)
+function eliminarFecha20(f,n){
+  pedirMotivo('Eliminar registro del día',`Se eliminarán <b>${n} visita(s) del ${esc(f)}</b> y sus V°B°. Quedará una copia en la hoja "Eliminados" del Sheets con tu nombre y el motivo.`,'Eliminar','peligro',async motivo=>{
+    visitasTodas().filter(v=>v.fecha===f).forEach(v=>quitarDeCola(v.id));
+    store.set('visitas',store.get('visitas',[]).filter(v=>v.fecha!==f));
+    store.set('srv_FT-20',(store.get('srv_FT-20',[])).filter(v=>v.fecha!==f));
+    store.set('vobo_local',store.get('vobo_local',[]).filter(x=>!(x.formato==='FT-20'&&x.clave===f)));
+    store.set('srvvb_FT-20',(store.get('srvvb_FT-20',[])).filter(x=>x.clave!==f));
+    const r=await enviarOEncolar({...cred(),accion:'eliminar',formato:'FT-20',id:f,tipo:'fecha',motivo});
+    toast(r==='cola'?'Se eliminará cuando haya señal':'Registro del día eliminado ✓');pila=['home','ft20'];render();
+  });
+}
+async function eliminarReg(f,id,tipo,volver,etiqueta){
+  pedirMotivo('Eliminar registro',`Se eliminará <b>${esc(etiqueta)}</b>. Quedará una copia en la hoja "Eliminados" del Sheets con tu nombre y el motivo.`,'Eliminar','peligro',async motivo=>{
+    const pend=quitarDeCola(id);
+    limpiarLocal(f,id);
+    if(!pend){const r=await enviarOEncolar({...cred(),accion:'eliminar',formato:f,id,tipo,motivo});toast(r==='cola'?'Se eliminará cuando haya señal':'Registro eliminado ✓')}
+    else toast('Registro eliminado ✓ (aún no se había enviado)');
+    pila=volver;render();
+  });
+}
+// Cargar una inspección guardada como borrador para editarla
+function confirmarEdicion(f,id,cb){
+  const tieneVB=vobo(f,id,'SS')||vobo(f,id,'RES');
+  pedirMotivo('Editar registro',`Se abrirá el registro para corregirlo. Al enviarlo, la versión anterior quedará copiada en la hoja "Ediciones".${tieneVB?' <b>El V°B° de este registro se anulará</b> y habrá que volver a firmarlo.':''}`,'Editar',false,motivo=>{
+    store.set('vobo_local',store.get('vobo_local',[]).filter(x=>!(x.formato===f&&String(x.clave)===String(id))));
+    store.set('srvvb_'+f,(store.get('srvvb_'+f,[])).filter(x=>String(x.clave)!==String(id)));
+    cb(motivo)});
+}
+const btnDel=(id,f)=>puede('EDITAR')?`<button class="diadel" data-idel="${esc(id)}" data-fecha="${esc(f||'')}" aria-label="Eliminar registro del ${esc(f||'')}" title="Eliminar">${svg('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>')}</button>`:'';
+function histReemplazar(entrada){const h=store.get('historial',[]).filter(x=>x.id!==entrada.id);h.unshift(entrada);store.set('historial',h.slice(0,80))}
+
+/* ===================== V°B° del supervisor ===================== */
+// Une los V°B° del Sheets con los dados en este equipo (incluye los que esperan señal)
+function vobo(formato,clave,rol){
+  const k=x=>x.formato===formato&&String(x.clave)===String(clave)&&x.rol===rol;
+  return store.get('vobo_local',[]).find(k)||(store.get('srvvb_'+formato,[])).find(k)||null;
+}
+function celdaVobo(formato,clave,rol,etiqueta,aviso){
+  const v=vobo(formato,clave,rol);
+  if(v)return `<b>${etiqueta}</b>${v.firma_img?`<img class="fir" src="${v.firma_img}" alt="Firma V°B°" style="height:46px;margin-top:4px">`:''}<br><small>${esc(v.supervisor)}${v.sync===false?' · por enviar':''}</small>`;
+  if(puede('VOBO'))return `<b>${etiqueta}</b><br><button data-vobo="${esc(formato)}|${esc(clave)}|${rol}|${esc(etiqueta)}|${esc(aviso||'')}" style="margin-top:4px">Firmar V°B°</button>`;
+  return `<b>${etiqueta}</b><br><small style="color:#7a4d00">Pendiente</small>`;
+}
+function enlazarVobo(){$('#scr').querySelectorAll('[data-vobo]').forEach(b=>b.onclick=()=>{const [f,c,r,e,a]=b.dataset.vobo.split('|');darVobo(f,c,r,e,a)})}
+
+/* ---------- firmas registradas: se dibujan una vez y luego se eligen de una lista ---------- */
+const ROLES={RES:'Responsable',SS:'Supervisora',AMBOS:'Responsable y supervisora'};
+const firmasLista=()=>store.get(MODO_PRUEBA?'firmas_prueba':'firmas',[]);
+function guardarFirmaLocal(f){const k=MODO_PRUEBA?'firmas_prueba':'firmas';const l=store.get(k,[]).filter(x=>x.id!==f.id);l.push(f);store.set(k,l)}
+async function descargarFirmas(){
+  if(MODO_PRUEBA||!sesion()||!navigator.onLine)return;
+  try{const r=await fetch(C.APPS_SCRIPT_URL+'?accion=firmas'+credQS());const j=await r.json();if(j.ok&&Array.isArray(j.firmas)){
+    const pend=store.get('firmas',[]).filter(x=>x.sync===false&&!j.firmas.some(y=>y.id===x.id));store.set('firmas',[...j.firmas,...pend]);if(vista()==='admFirmas')render()}}catch(e){}
+}
+// Formulario para dibujar y registrar una firma (se usa en el V°B° y en Administrar)
+function formFirmaHTML(rol){return `<label class="f">Nombre de quien firma<input type="text" id="nfNom" value="${esc(sesion().usuario)}"></label>
+  <label class="f">Firma como<select id="nfRol">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}" ${k===(rol||'AMBOS')?'selected':''}>${v}</option>`).join('')}</select></label>
+  <canvas class="sig" id="nfSig"></canvas><small class="note">Firme dentro del recuadro con el dedo. Se guardará para las próximas veces.</small><button class="pill" id="nfBor" style="align-self:flex-start;cursor:pointer">Borrar firma</button>`}
+async function registrarFirma(sh,pad){
+  const nombre=sh.querySelector('#nfNom').value.trim(),rol=sh.querySelector('#nfRol').value;
+  if(!nombre){toast('Escribe el nombre de quien firma');return null}
+  if(!pad.firmo()){toast('Falta la firma');return null}
+  const f={id:'F'+Date.now().toString(36).toUpperCase(),nombre,rol,firma_img:miniFirma(sh.querySelector('#nfSig')),activo:true,sync:false};
+  guardarFirmaLocal(f);
+  await enviarOEncolar({...cred(),accion:'guardarFirma',firmaReg:{id:f.id,nombre,rol,firmaMini:f.firma_img,firmaPng:pad.png()}});
+  return f;
+}
+function darVobo(formato,clave,rol,etiqueta,aviso){
+  const fs=firmasLista().filter(f=>f.activo!==false&&(f.rol===rol||f.rol==='AMBOS'));
+  const sh=document.createElement('div');sh.className='sheet';
+  sh.innerHTML=`<div class="in"><b style="font-size:18px">${esc(etiqueta)}</b>
+    <div class="card"><b>${esc(formato)} · ${esc(C.formatos[formato]?.titulo||'')}</b><br><small class="note">${formato==='FT-20'?'Registro del día '+esc(clave):'Registro '+esc(clave)}</small></div>
+    ${aviso?`<div class="banner warn">${esc(aviso)} Puedes firmar igual, pero revisa antes.</div>`:''}
+    <label class="f">¿Quién firma?<select id="vbSel">${fs.map(f=>`<option value="${esc(f.id)}">${esc(f.nombre)}</option>`).join('')}<option value="__nueva" ${fs.length?'':'selected'}>+ Registrar nueva firma…</option></select></label>
+    <div id="vbPrev" class="card" style="text-align:center" ${fs.length?'':'hidden'}></div>
+    <div id="vbNueva" style="display:flex;flex-direction:column;gap:10px" ${fs.length?'hidden':''}>${formFirmaHTML(rol)}</div>
+    <p class="note">Al firmar confirmas que revisaste el registro.</p>
+    <button class="btn" id="vbOk">Firmar V°B°</button><button class="btn ghost" id="vbNo">Cancelar</button></div>`;
+  document.body.appendChild(sh);
+  const sel=sh.querySelector('#vbSel'),prev=sh.querySelector('#vbPrev'),nueva=sh.querySelector('#vbNueva');let pad=null;
+  const pintar=()=>{const f=fs.find(x=>x.id===sel.value);const nv=sel.value==='__nueva';prev.hidden=nv;nueva.hidden=!nv;
+    if(f)prev.innerHTML=`<img src="${f.firma_img}" alt="Firma" style="height:70px;display:block;margin:0 auto;background:#fff;border-radius:8px"><small class="note">${esc(f.nombre)} · ${esc(ROLES[f.rol]||'')}</small>`;
+    if(nv&&!pad){pad=padFirma(sh.querySelector('#nfSig'));sh.querySelector('#nfBor').onclick=pad.limpiar}};
+  sel.onchange=pintar;pintar();
+  sh.querySelector('#vbNo').onclick=()=>sh.remove();
+  sh.querySelector('#vbOk').onclick=async e=>{
+    let f=fs.find(x=>x.id===sel.value);
+    if(!f){e.target.disabled=true;f=await registrarFirma(sh,pad);if(!f){e.target.disabled=false;return}}
+    e.target.disabled=true;
+    const id='VB-'+Date.now().toString(36).toUpperCase();
+    const reg={id,formato,clave,rol,supervisor:f.nombre,fecha_hora:`${fecha(new Date())} ${hora(new Date())}`,firma_img:f.firma_img,sync:false};
+    const l=store.get('vobo_local',[]);l.push(reg);store.set('vobo_local',l.slice(-60));
+    const r=await enviarOEncolar({...cred(),accion:'vobo',id,formato,clave,rol,firmaId:f.id,firmaMini:f.firma_img});
+    sh.remove();toast(r==='cola'?'V°B° guardado; se enviará cuando haya señal':'V°B° firmado ✓');render();
+  };
+}
+// Administrar → Firmas registradas
+function admFirmas(){
+  cab('Firmas registradas','Responsables y supervisoras');descargarFirmas();
+  const fs=firmasLista();
+  $('#scr').innerHTML=`<button class="btn" id="afN">+ Registrar firma</button>
+    <p class="note">Cada responsable o supervisora registra su firma una sola vez. Luego, al dar V°B°, solo se elige su nombre de la lista.</p>
+    ${fs.length?fs.map(f=>`<div class="card row" style="${f.activo===false?'opacity:.55':''}"><span style="display:flex;gap:12px;align-items:center;min-width:0"><img src="${f.firma_img}" alt="" style="height:44px;width:110px;object-fit:contain;background:#fff;border-radius:8px;border:1px solid var(--line)"><span><b>${esc(f.nombre)}</b><br><small class="note">${esc(ROLES[f.rol]||f.rol)}${f.sync===false?' · por enviar':''}</small></span></span>
+      <button class="pill ${f.activo===false?'':'ok'}" data-fa="${esc(f.id)}" style="cursor:pointer;padding:8px 10px">${f.activo===false?'Inactiva':'Activa'}</button></div>`).join(''):'<p class="note">Aún no hay firmas registradas.</p>'}`;
+  $('#afN').onclick=()=>{
+    const sh=document.createElement('div');sh.className='sheet';
+    sh.innerHTML=`<div class="in"><b style="font-size:18px">Registrar firma</b>${formFirmaHTML('AMBOS')}<button class="btn" id="nfOk">Guardar firma</button><button class="btn ghost" id="nfNo">Cancelar</button></div>`;
+    document.body.appendChild(sh);sh.querySelector('#nfNom').value='';
+    const pad=padFirma(sh.querySelector('#nfSig'));sh.querySelector('#nfBor').onclick=pad.limpiar;sh.querySelector('#nfNo').onclick=()=>sh.remove();
+    sh.querySelector('#nfOk').onclick=async()=>{const f=await registrarFirma(sh,pad);if(f){sh.remove();toast('Firma registrada ✓');render()}};
+  };
+  $('#scr').querySelectorAll('[data-fa]').forEach(b=>b.onclick=async()=>{const f=fs.find(x=>x.id===b.dataset.fa);f.activo=f.activo===false;guardarFirmaLocal(f);
+    await enviarOEncolar({...cred(),accion:'guardarFirma',firmaReg:{id:f.id,nombre:f.nombre,rol:f.rol,activo:f.activo}});render()});
+}
+
+/* ===================== FT-20 control de visitas ===================== */
+// miniatura liviana de la firma para verla en el historial de este equipo
+function miniFirma(c){const m=document.createElement('canvas');m.width=180;m.height=Math.round(180*c.height/c.width)||60;const x=m.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,m.width,m.height);x.drawImage(c,0,0,m.width,m.height);return m.toDataURL('image/jpeg',.6)}
+const hoyStr=()=>fecha(new Date());
+function limpiarVisitasViejas(){const v=store.get('visitas',[]);const lim=Date.now()-7*864e5;store.set('visitas',v.filter(z=>!z.salida||z.ts>lim||!z.syncIng||!z.syncSal))}
+
+// Une lo que hay en Google Sheets (todos los equipos) con lo registrado en este equipo (incluye pendientes)
+// registros anteriores guardaban "Otro: …"; ahora se muestra solo el motivo
+const limpiarMotivo=m=>{const t=String(m||'').replace(/^Otro:\s*/i,'').trim();return t||String(m||'')};
+function visitasTodas(){
+  const m={};
+  (store.get('srv_FT-20',[])).forEach(r=>{if(!r.id)return;m[r.id]={id:r.id,fecha:r.fecha,nombre:r.nombres_apellidos,empresa:r.empresa,motivo:limpiarMotivo(r.motivo_visita),salud:r.declara_libre_enfermedades,ingreso:r.hora_ingreso,salida:r.hora_salida||null,mandil:r.numero_mandil,lentes:r.usa_lentes==='SÍ',lenIni:r.lentes_control_inicio||'',lenFin:r.lentes_control_final||'',insp:r.inspeccionado_por,firmaMini:r.firma_img||'',papel:r.firma_en_papel==='SÍ',syncIng:true,syncSal:!!r.hora_salida,srv:true}});
+  store.get('visitas',[]).forEach(v=>{const sv=m[v.id]||{};m[v.id]={...sv,...v,motivo:limpiarMotivo(v.motivo),salida:v.salida||sv.salida||null,firmaMini:v.firmaMini||sv.firmaMini||''}});
+  return Object.values(m).sort((a,b)=>(aD(b.fecha)-aD(a.fecha))||String(b.ingreso).localeCompare(String(a.ingreso)));
+}
+function visitasVisibles(){return visitasTodas().filter(v=>v.fecha===hoyStr()||!v.salida)}
+
+function ft20(){
+  cab('Control de visitas',`${F20.codigo} · V${F20.version}`);
+  refrescar('FT-20');
+  const todas=visitasTodas(),dias={};
+  todas.forEach(v=>(dias[v.fecha]=dias[v.fecha]||[]).push(v));
+  const orden=Object.keys(dias).sort((a,b)=>aD(b)-aD(a));
+  const viejas=todas.filter(v=>!v.salida&&v.fecha!==hoyStr());
+  $('#scr').innerHTML=`
+  <button class="btn" id="nueva">+ Registrar visita</button>
+  <p class="note">En el registro puedes elegir la fecha (por defecto, hoy).</p>
+  ${viejas.length?`<div class="banner bad">${viejas.length} visita(s) de días anteriores sin salida marcada. Ábrelas en su fecha para cerrarlas.</div>`:''}
+  <p class="h">Historial por fecha</p>
+  ${orden.map(f=>{const vs=dias[f],dentro=vs.filter(v=>!v.salida).length,al=vs.filter(v=>v.salud==='NO'||v.lenIni==='No conforme'||v.lenFin==='No conforme').length,pend=vs.filter(v=>!v.syncIng||(v.salida&&!v.syncSal)).length;
+    return `<div class="diaw"><button class="dia" data-f="${f}">${calendario(f)}<span class="tx"><b>${f===hoyStr()?'Hoy · ':''}${f}</b><small>${vs.length} visita(s)${dentro?` · ${dentro} en planta`:''}</small></span><span style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${dentro?`<span class="pill warn">${dentro} en planta</span>`:''}${al?`<span class="pill bad">${al} alerta(s)</span>`:''}${vs.length&&vobo('FT-20',f,'SS')?'<span class="pill ok">V°B° ✓</span>':''}${pend?'<span class="pill warn">Por enviar</span>':''}</span></button>${puede('EDITAR')?`<button class="diadel" data-fdel="${f}" aria-label="Eliminar las visitas del ${f}" title="Eliminar">${svg('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>')}</button>`:''}</div>`}).join('')||'<p class="note">Aún no hay visitas registradas.</p>'}
+  ${MODO_PRUEBA?'':'<p class="note">El historial muestra los últimos 120 días registrados en todos los equipos.</p>'}`;
+  $('#nueva').onclick=()=>{f20={};ir('ft20nuevo')};
+  $('#scr').querySelectorAll('[data-f]').forEach(e=>e.onclick=()=>ir('ft20dia:'+e.dataset.f));
+  $('#scr').querySelectorAll('[data-fdel]').forEach(e=>e.onclick=()=>eliminarFecha20(e.dataset.fdel,(dias[e.dataset.fdel]||[]).length));
+}
+
+function ft20dia(f){
+  cab(f===hoyStr()?'Visitas de hoy':'Visitas del '+f,`${F20.codigo} · V${F20.version}`);
+  const vs=visitasTodas().filter(v=>v.fecha===f).sort((a,b)=>String(a.ingreso).localeCompare(String(b.ingreso)));
+  const insp=[...new Set(vs.map(v=>v.insp).filter(Boolean))].join(', ');
+  const len=v=>v.lentes?`${v.lenIni==='No conforme'?'✗':'✓'} / ${v.lenFin?(v.lenFin==='No conforme'?'✗':'✓'):'…'}`:'No usa';
+  const esHoy=f===hoyStr(),ed=puede('EDITAR');
+  $('#scr').innerHTML=`
+  <button class="btn" id="nueva">+ Registrar visita${esHoy?'':' en esta fecha'}</button>
+  ${barraAcc({})}
+  <div class="fmtwrap"><table class="fmt" style="min-width:820px">
+    <tr><td class="tit" colspan="7" style="text-align:left"><img class="flogo" src="logo_pdc.png" alt="">${esc(C.empresa)}<br>REGISTRO DE CONTROL DE VISITAS</td><td class="meta" colspan="3">Código: ${F20.codigo}<br>Fecha: ${F20.fecha||''}<br>Versión: ${F20.version}</td></tr>
+    <tr><td colspan="4"><b>FECHA:</b> ${f}</td><td colspan="6"><b>INSPECCIONADO POR:</b> ${esc(insp||(f===hoyStr()?sesion().usuario:''))}</td></tr>
+    <tr><th>N°</th><th>Nombres y apellidos</th><th>Empresa</th><th>Motivo de visita</th><th>Libre de enfermedades</th><th>Hr. ingreso</th><th>Hr. salida</th><th>Lentes ing./sal.</th><th>Firma</th><th>N° mandil</th>${ed?'<th class="noexp">Acciones</th>':''}</tr>
+    ${vs.map((v,i)=>`<tr class="${v.salud==='NO'||v.lenIni==='No conforme'||v.lenFin==='No conforme'?'nc':''}"><td class="c">${i+1}</td><td><b>${esc(v.nombre)}</b></td><td>${esc(v.empresa)}</td><td>${esc(v.motivo)}</td><td class="c">${esc(v.salud)}</td><td class="c">${esc(v.ingreso)}</td>
+      <td class="c">${v.salida?esc(v.salida):`<button data-sal="${esc(v.id)}">Marcar salida</button>`}</td><td class="c">${len(v)}</td>
+      <td class="c">${v.firmaMini?`<img class="fir" src="${v.firmaMini}" alt="Firma">`:v.papel?'<small>Sin firma</small>':'✔'}</td><td class="c">${esc(v.mandil)}</td>${ed?`<td class="noexp"><span class="ra"><button data-ed="${esc(v.id)}">Editar</button><button class="del" data-del="${esc(v.id)}">Eliminar</button></span></td>`:''}</tr>`).join('')||'<tr><td colspan="10">Sin visitas registradas en esta fecha.</td></tr>'}
+    <tr><td colspan="5" style="vertical-align:top">${celdaVobo('FT-20',f,'RES','V°B° RES.',vs.some(v=>!v.salida)?'Hay visitas sin salida marcada.':'')}</td><td colspan="5" style="vertical-align:top">${celdaVobo('FT-20',f,'SS','V°B° S.S.',vs.some(v=>!v.salida)?'Hay visitas sin salida marcada.':'')}</td></tr>
+  </table></div>
+  <p class="note">Desliza la tabla hacia los lados para ver todas las columnas. Las filas en rojo tienen una alerta (salud o lentes).${vs.some(v=>!v.syncIng||(v.salida&&!v.syncSal))?' Hay datos de este equipo aún por enviar.':''}</p>`;
+  $('#nueva').onclick=()=>{f20={fecha:f};ir('ft20nuevo')};
+  $('#scr').querySelectorAll('[data-sal]').forEach(b=>b.onclick=()=>marcarSalida(b.dataset.sal));
+  enlazarVobo();
+  enlazarAcc({archivo:`FT-20 Visitas ${f}`});
+  $('#scr').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const v=vs.find(z=>z.id===b.dataset.del);eliminarReg('FT-20',v.id,'registro',['home','ft20','ft20dia:'+f],`la visita de ${v.nombre} (${v.fecha})`)});
+  $('#scr').querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>{const v=vs.find(z=>z.id===b.dataset.ed);
+    pedirMotivo('Editar visita','Se abrirá la visita para corregirla. La versión anterior quedará copiada en la hoja "Ediciones".','Editar',false,motivo=>{
+      const mot=String(v.motivo||'').replace(/^Otro:\s*/,'');
+      f20={editId:v.id,editMotivo:motivo,fecha:v.fecha,nombre:v.nombre,empresa:v.empresa,motivo:mot,mandil:v.mandil,lentes:v.lentes?'SI':'NO',lenIni:v.lenIni==='No conforme'?'NC':v.lenIni?'C':'',lenFin:v.lenFin==='No conforme'?'NC':v.lenFin?'C':'',lenObs:'',salud:v.salud==='NO'?'NO':'SI',acepta:true,hIng:v.ingreso||'',hSal:v.salida||'',firmaPrev:v.firmaMini,papelPrev:v.papel};
+      ir('ft20nuevo')})});
+}
+
+function marcarSalida(id){
+  const v=visitasTodas().find(z=>z.id===id);if(!v)return;
+  if(!store.get('visitas',[]).some(z=>z.id===id)){const all=store.get('visitas',[]);all.unshift({...v,ts:Date.now()});store.set('visitas',all)}
+  const h=hora(new Date());
+  const sh=document.createElement('div');sh.className='sheet';
+  let lenFin=null;
+  sh.innerHTML=`<div class="in"><b style="font-size:18px">Registrar salida</b><div class="card"><b>${esc(v.nombre)}</b><br><small class="note">${esc(v.empresa)} · Mandil ${esc(v.mandil)}</small><br>Hora de salida: <b class="mono">${h}</b></div>
+    ${v.lentes?`<div class="card" style="display:flex;flex-direction:column;gap:8px"><b>Control de lentes a la salida</b><span class="note">Al ingreso: ${esc(v.lenIni)}</span>
+      <div class="seg" id="sLen"><button type="button" data-v="C">✓ Conforme</button><button type="button" data-v="NC" class="badopt">✗ No conforme</button></div>
+      <label class="f" id="sLenObsL" hidden>Observación / medida correctiva<textarea id="sLenObs" placeholder="Ej.: falta luna, se revisa la zona recorrida"></textarea></label></div>`:''}
+    <p class="note">Verifica que devolvió el mandil N° ${esc(v.mandil)} y el carnet.</p><button class="btn" id="sOk">Confirmar salida</button><button class="btn ghost" id="sNo">Cancelar</button></div>`;
+  document.body.appendChild(sh);
+  if(v.lentes)sh.querySelector('#sLen').onclick=e=>{const b=e.target.closest('button');if(!b)return;lenFin=b.dataset.v;sh.querySelectorAll('#sLen button').forEach(z=>z.classList.toggle('on',z===b));sh.querySelector('#sLenObsL').hidden=lenFin!=='NC'};
+  sh.querySelector('#sNo').onclick=()=>sh.remove();
+  sh.querySelector('#sOk').onclick=async()=>{
+    const cambios={hora_salida:h,fecha_salida:hoyStr(),salida_registrada_por:sesion().usuario};const alertas=[];
+    if(v.lentes){
+      if(!lenFin)return toast('Marca el estado de los lentes a la salida');
+      const obs=sh.querySelector('#sLenObs').value.trim();
+      if(lenFin==='NC'&&!obs)return toast('Escribe la observación de los lentes');
+      cambios.lentes_control_final=lenFin==='C'?'Conforme':'No conforme';cambios.lentes_obs_final=obs;
+      if(lenFin==='NC')alertas.push(`Visita ${v.nombre} (${v.empresa}) salió con lentes NO CONFORMES (al ingreso: ${v.lenIni}): ${obs}. Posible riesgo de materia extraña: revisar zonas recorridas.`);
+    }
+    const all=store.get('visitas',[]);const x=all.find(z=>z.id===id);x.salida=h;x.lenFin=cambios.lentes_control_final||'';x.syncSal=false;store.set('visitas',all);sh.remove();
+    const r=await enviarOEncolar({...cred(),formato:'FT-20',codigo:F20.codigo,version:F20.version,actualizar:{id,cambios},alertas});
+    toast(r==='cola'?'Salida guardada; se enviará cuando haya señal':'Salida registrada ✓');render();
+  };
+}
+
+let f20={};
+function ft20nuevo(){
+  f20={nombre:'',empresa:'',motivo:'',mandil:'',acepta:false,salud:null,hIng:'',hSal:'',...f20};
+  f20.fecha=f20.fecha||hoyStr();const ED=!!f20.editId,RG=(ED||f20.fecha!==hoyStr())?{fecha:f20.fecha}:null;   // fecha anterior a hoy o edición: las horas se escriben a mano
+  cab(ED?'Editar visita':'Nueva visita',`${F20.codigo} · V${F20.version} · ${f20.fecha}`);
+  const li=a=>a.map(t=>`<li>${esc(t)}</li>`).join('');
+  $('#scr').innerHTML=`
+  ${ED?'<div class="banner warn"><b>Editando una visita ya registrada.</b> La versión anterior queda copiada en el Sheets.</div>':''}
+  ${campoFecha('vF',f20.fecha)}
+  ${RG?`<div class="card" style="display:flex;gap:10px;flex-wrap:wrap"><label class="f" style="flex:1 1 140px">Hora de ingreso<input type="time" id="vHI" value="${esc(f20.hIng)}"></label><label class="f" style="flex:1 1 140px">Hora de salida (si se conoce)<input type="time" id="vHS" value="${esc(f20.hSal)}"></label></div>`:''}
+  <div class="card" style="font-size:14.5px"><b>Sr(a) visitante: bienvenido a nuestra planta empacadora de alimentos.</b> Le pedimos cumplir con las siguientes normas de la empresa:
+    <details open style="margin-top:8px"><summary><b>Cumplimiento de Calidad – BPM</b></summary><ul style="margin:6px 0;padding-left:20px">${li(L('ft20.normasBPM').map(x=>x.v))}</ul></details>
+    <details open><summary><b>Cumplimiento con la Seguridad</b></summary><ul style="margin:6px 0;padding-left:20px">${li(L('ft20.normasSeguridad').map(x=>x.v))}</ul></details>
+  </div>
+  <label class="f">Nombres y apellidos<input type="text" id="vNom" autocomplete="off" value="${esc(f20.nombre)}"></label>
+  <label class="f">Empresa<input type="text" id="vEmp" autocomplete="off" value="${esc(f20.empresa)}"></label>
+  <label class="f">Motivo de visita<input type="text" id="vMot" list="dlMot" autocomplete="off" maxlength="120" placeholder="Elige de la lista o escribe el motivo" value="${esc(f20.motivo)}"></label>
+  <datalist id="dlMot">${L('ft20.motivos').map(x=>x.v).filter(m=>m!=='Otro').map(m=>`<option value="${esc(m)}"></option>`).join('')}</datalist>
+  <label class="f">N° de mandil entregado<input type="text" id="vMan" autocomplete="off" maxlength="20" placeholder="Ej.: 12, M-12, V-03" value="${esc(f20.mandil)}"></label>
+  <div class="card" style="display:flex;flex-direction:column;gap:8px"><b>Control de lentes</b><span class="note">Como en el FT-14: si la visita usa lentes, se revisa su estado al ingresar y al salir.</span>
+    <div class="seg" id="vLen"><button type="button" data-v="NO" class="${f20.lentes==='NO'?'on':''}">No usa lentes</button><button type="button" data-v="SI" class="${f20.lentes==='SI'?'on':''}">Sí usa lentes</button></div>
+    <div id="vLenEst" ${f20.lentes==='SI'?'':'hidden'} style="display:flex;flex-direction:column;gap:8px">
+      ${RG?`<span style="font-size:14.5px">Estado de los lentes a la salida (si se registró):</span><div class="seg" id="vLenFin"><button type="button" data-v="" class="${!f20.lenFin?'on':''}">Sin dato</button><button type="button" data-v="C" class="${f20.lenFin==='C'?'on':''}">✓ Conforme</button><button type="button" data-v="NC" class="badopt ${f20.lenFin==='NC'?'on':''}">✗ No conforme</button></div>`:''}
+      <span style="font-size:14.5px">Estado de los lentes al ingreso (${esc(T('ft20.lentesCriterio'))}):</span>
+      <div class="seg" id="vLenIni"><button type="button" data-v="C" class="${f20.lenIni==='C'?'on':''}">✓ Conforme</button><button type="button" data-v="NC" class="badopt ${f20.lenIni==='NC'?'on':''}">✗ No conforme</button></div>
+      <label class="f" id="vLenObsL" ${f20.lenIni==='NC'?'':'hidden'}>Observación / medida correctiva<textarea id="vLenObs" placeholder="Ej.: luna rajada, se indica no ingresar a sala de proceso">${esc(f20.lenObs||'')}</textarea></label>
+    </div>
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;gap:8px"><b>Declaración de salud</b><span style="font-size:14.5px">${esc(T('ft20.salud'))}</span>
+    <div class="seg" id="vSal"><button type="button" data-v="SI" class="${f20.salud==='SI'?'on':''}">No, me encuentro bien</button><button type="button" data-v="NO" class="badopt ${f20.salud==='NO'?'on':''}">Sí, he tenido malestar</button></div>
+    <div class="banner bad" id="vSalMsg" ${f20.salud==='NO'?'':'hidden'}><b>Comunicar al jefe de SST</b> antes de que la visita ingrese a zonas de proceso. Se enviará una alerta a las responsables del área.</div>
+  </div>
+  <label style="display:flex;gap:10px;align-items:flex-start;font-size:15px"><input type="checkbox" id="vAc" style="width:22px;height:22px;flex:none" ${f20.acepta?'checked':''}> He leído y me comprometo a cumplir las normas de Calidad (BPM) y Seguridad.</label>
+  <div><p class="h" style="margin-bottom:6px">Firma de la visita${ED?' (opcional: si no firma de nuevo, se mantiene la firma anterior)':RG?' (opcional)':''}</p><canvas class="sig" id="vSig"></canvas><small class="note">Firme dentro del recuadro con el dedo</small><button class="pill" id="vBor" style="margin-top:6px;cursor:pointer">Borrar firma</button></div>
+  <p class="note">${RG?'':'Hora de ingreso: se registra sola al guardar. '}Inspeccionado por: <b>${esc(sesion().usuario)}</b>.</p>
+  <button class="btn" id="vGo">${ED?'Guardar cambios':RG?'Guardar visita':'Registrar ingreso'}</button>`;
+  const pad=padFirma($('#vSig'));
+  $('#vBor').onclick=pad.limpiar;
+  const sync=()=>{f20.nombre=$('#vNom').value;f20.empresa=$('#vEmp').value;f20.motivo=$('#vMot').value;f20.mandil=$('#vMan').value;f20.acepta=$('#vAc').checked};
+  const segSel=(id,fn)=>{$(id).onclick=e=>{const b=e.target.closest('button');if(!b)return;$(id).querySelectorAll('button').forEach(z=>z.classList.toggle('on',z===b));fn(b.dataset.v)}};
+  segSel('#vLen',v=>{f20.lentes=v;$('#vLenEst').hidden=v!=='SI'});
+  segSel('#vLenIni',v=>{f20.lenIni=v;$('#vLenObsL').hidden=v!=='NC'});
+  $('#vLenObs').oninput=e=>f20.lenObs=e.target.value;
+  $('#vF').onchange=()=>{const f=leerFecha('#vF');if(!f){toast('La fecha no puede ser posterior a hoy');$('#vF').value=aISO(f20.fecha);return}sync();f20.fecha=f;ft20nuevo()};
+  if(RG){segSel('#vLenFin',v=>f20.lenFin=v);$('#vHI').onchange=e=>f20.hIng=e.target.value;$('#vHS').onchange=e=>f20.hSal=e.target.value}
+  $('#vSal').onclick=e=>{const b=e.target.closest('button');if(!b)return;f20.salud=b.dataset.v;$('#vSal').querySelectorAll('button').forEach(z=>z.classList.toggle('on',z===b));$('#vSalMsg').hidden=f20.salud!=='NO'};
+  $('#vGo').onclick=async()=>{
+    sync();
+    const falta=[!f20.nombre.trim()&&'nombre',!f20.empresa.trim()&&'empresa',!f20.motivo.trim()&&'motivo de visita',!String(f20.mandil).trim()&&'N° de mandil',!f20.lentes&&'¿usa lentes?',f20.lentes==='SI'&&!f20.lenIni&&'estado de lentes',f20.lentes==='SI'&&f20.lenIni==='NC'&&!(f20.lenObs||'').trim()&&'observación de lentes',!f20.salud&&'declaración de salud',!f20.acepta&&'aceptar normas',!RG&&!pad.firmo()&&'firma',RG&&!f20.hIng&&'hora de ingreso',RG&&f20.hSal&&f20.hSal<f20.hIng&&'hora de salida posterior al ingreso'].filter(Boolean);
+    if(falta.length)return toast('Falta: '+falta.join(', '),3200);
+    $('#vGo').disabled=true;
+    const d=new Date(),id=ED?f20.editId:'FT20-'+d.getTime().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,5).toUpperCase();
+    const motivo=f20.motivo.trim();f20.mandil=String(f20.mandil).trim();
+    const firmo=pad.firmo(),lenFin=RG&&f20.lentes==='SI'&&f20.lenFin?(f20.lenFin==='C'?'Conforme':'No conforme'):'';
+    const v={id,ts:d.getTime(),fecha:RG?RG.fecha:fecha(d),nombre:f20.nombre.trim(),empresa:f20.empresa.trim(),motivo,mandil:f20.mandil,ingreso:RG?f20.hIng:hora(d),salida:RG&&f20.hSal?f20.hSal:null,lenFin,papel:ED?(!firmo&&f20.papelPrev):RG&&!firmo,insp:sesion().usuario,firmaMini:firmo?miniFirma($('#vSig')):(ED?f20.firmaPrev||'':''),salud:f20.salud==='SI'?'SÍ':'NO',lentes:f20.lentes==='SI',lenIni:f20.lentes==='SI'?(f20.lenIni==='C'?'Conforme':'No conforme'):'',syncIng:false,syncSal:!!(RG&&f20.hSal)};
+    const lenObs=f20.lentes==='SI'&&f20.lenIni==='NC'?f20.lenObs.trim():'';
+    if(ED){
+      const all=store.get('visitas',[]).filter(x=>x.id!==id);all.unshift({...v,syncIng:true,syncSal:true});store.set('visitas',all);
+      const cambios={fecha:v.fecha,nombres_apellidos:v.nombre,empresa:v.empresa,motivo_visita:motivo,declara_libre_enfermedades:v.salud,hora_ingreso:v.ingreso,hora_salida:v.salida||'',numero_mandil:v.mandil,
+        usa_lentes:v.lentes?'SÍ':'NO',lentes_control_inicio:v.lenIni,lentes_control_final:lenFin,editado_por:sesion().usuario,fecha_edicion:iso(d)};
+      if(lenObs)cambios.lentes_obs_inicio=lenObs;
+      store.set('srv_FT-20',(store.get('srv_FT-20',[])).map(x=>x.id===id?{...x,...cambios,firma_img:v.firmaMini||x.firma_img}:x));
+      const r=await enviarOEncolar({...cred(),accion:'editar',motivo:f20.editMotivo,formato:'FT-20',codigo:F20.codigo,version:F20.version,firma:firmo?pad.png():'',firmaMini:firmo?v.firmaMini:'',actualizar:{id,cambios},alertas:[]});
+      f20={};toast(r==='cola'?'Cambios guardados; se enviarán cuando haya señal':'Visita actualizada ✓');pila=['home','ft20','ft20dia:'+v.fecha];return render();
+    }
+    const all=store.get('visitas',[]);all.unshift(v);store.set('visitas',all);
+    const p={...cred(),formato:'FT-20',codigo:F20.codigo,version:F20.version,firma:firmo?pad.png():'',firmaMini:v.firmaMini,
+      registro:{id,fecha:v.fecha,inspeccionado_por:sesion().usuario,nombres_apellidos:v.nombre,empresa:v.empresa,motivo_visita:motivo,declara_libre_enfermedades:v.salud,hora_ingreso:v.ingreso,hora_salida:v.salida||'',numero_mandil:v.mandil,acepta_normas:'SÍ',
+        fecha_llenado:iso(d),firma_en_papel:v.papel?'SÍ':'NO',
+        usa_lentes:v.lentes?'SÍ':'NO',lentes_control_inicio:v.lenIni,lentes_obs_inicio:lenObs,lentes_control_final:lenFin,lentes_obs_final:'',vb_responsable:'',vb_sst:''},
+      alertas:[
+        ...(v.salud==='NO'?[`Visita ${v.nombre} (${v.empresa}) declaró malestar de salud en las últimas 72 h. Ingreso ${v.ingreso}, mandil ${v.mandil}. Coordinar con el jefe de SST.`]:[]),
+        ...(v.lenIni==='No conforme'?[`Visita ${v.nombre} (${v.empresa}) ingresó con lentes NO CONFORMES: ${lenObs}`]:[])
+      ]};
+    const r=await enviarOEncolar(p);
+    f20={};
+    toast(r==='prueba'?'Modo prueba: registro simulado':r==='ok'?(RG?'Visita guardada ✓':`Ingreso registrado ✓ ${v.ingreso}`):'Sin conexión: se guardó y se enviará solo',3000);
+    pila=['home','ft20','ft20dia:'+v.fecha];render();
+  };
+}
+
+/* ===================== ADMINISTRAR LISTAS ===================== */
+let edit=null;                // copia de trabajo de la lista que se está editando
+const TIPOS={lista:'Lista de textos',codigo:'Código + descripción',par:'Código + nombre (se puede repetir)',rango:'Rango de números + nombre',area:'Áreas a verificar',texto:'Texto único',numero:'Número'};
+const FRECS=['Diario','Interdiario','Semanal','Quincenal','Mensual'];
+
+function adm(){
+  cab('Administrar',MODO_PRUEBA?'Modo prueba: cambios solo en este equipo':'Se guardan en Google Sheets');
+  const grupos={};Object.values(CAT).forEach(l=>(grupos[l.formato]=grupos[l.formato]||[]).push(l));
+  const orden=Object.keys(grupos).sort((a,b)=>a==='General'?-1:b==='General'?1:a.localeCompare(b));
+  $('#scr').innerHTML=`
+  <button class="mi" id="goUsr"><span class="ic">👤</span><span class="tx"><b>Usuarios y permisos</b><small>Crear usuarios, contraseñas y a qué módulos tienen ingreso</small></span></button>
+  <button class="mi" id="goCor"><span class="ic">✉</span><span class="tx"><b>Correos de alerta</b><small>Nombre, cargo y correo de quienes reciben las alertas</small></span></button>
+  <button class="mi" id="goFir"><span class="ic">✍</span><span class="tx"><b>Firmas registradas</b><small>Firmas de responsables y supervisoras para el V°B°</small></span></button>
+  <p class="h">Listas y desplegables</p>
+  <div class="banner ok">Aquí se editan todos los desplegables y opciones de los registros. Los celulares toman los cambios la próxima vez que abren la app con señal.</div>
+  <button class="btn" id="nuevaLista">+ Crear lista nueva</button>
+  ${orden.map(f=>`<p class="h">${esc(f)}${C.formatos[f]?' · '+esc(C.formatos[f].titulo):''}</p>
+    ${grupos[f].map(l=>{const act=l.items.filter(x=>x.on).length,tot=l.items.length;const unico=l.tipo==='texto'||l.tipo==='numero';
+      return `<button class="mi" data-l="${esc(l.id)}"><span class="tx"><b>${esc(l.nombre)}</b><small>${TIPOS[l.tipo]||l.tipo}${unico?': '+esc((l.items[0]||{}).v||'').slice(0,50):''}</small></span>${unico?'':`<span class="pill">${act}${act!==tot?' / '+tot:''}</span>`}</button>`}).join('')}`).join('')}`;
+  $('#scr').querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{edit=JSON.parse(JSON.stringify(CAT[b.dataset.l]));ir('admEdit')});
+  $('#nuevaLista').onclick=()=>ir('admNueva');
+  $('#goUsr').onclick=()=>ir('admUsr');$('#goFir').onclick=()=>ir('admFirmas');$('#goCor').onclick=()=>ir('admCorreos');
+}
+
+function admNueva(){
+  cab('Crear lista nueva','Para registros actuales o futuros');
+  const fs=['General',...Object.keys(C.formatos)];
+  $('#scr').innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:12px">
+    <label class="f">Registro al que pertenece<select id="nlF">${fs.map(f=>`<option value="${f}">${f}${C.formatos[f]?' · '+esc(C.formatos[f].titulo):''}</option>`).join('')}<option value="__otro">Otro (escribir código)…</option></select></label>
+    <label class="f" id="nlFoL" hidden>Código del registro (ej. FT-22)<input type="text" id="nlFo"></label>
+    <label class="f">Nombre de la lista<input type="text" id="nlN" placeholder="Ej.: Áreas de muestreo de agua"></label>
+    <label class="f">Tipo<select id="nlT">${Object.entries(TIPOS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label>
+    <button class="btn" id="nlGo">Crear y agregar ítems</button></div>
+    <p class="note">La lista queda guardada y lista para usarse. Para que aparezca dentro de un formulario, el formulario tiene que usarla (eso se programa una vez, al crear o ajustar el registro).</p>`;
+  $('#nlF').onchange=()=>$('#nlFoL').hidden=$('#nlF').value!=='__otro';
+  $('#nlGo').onclick=()=>{
+    const f=$('#nlF').value==='__otro'?$('#nlFo').value.trim().toUpperCase():$('#nlF').value,n=$('#nlN').value.trim(),t=$('#nlT').value;
+    if(!f||!n)return toast('Completa el registro y el nombre');
+    const slug=n.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,30);
+    let id=f.toLowerCase().replace(/[^a-z0-9]/g,'')+'.'+slug;let k=2;while(CAT[id])id=id.replace(/_\d+$/,'')+'_'+k++;
+    edit={id,formato:f,nombre:n,tipo:t,items:(t==='texto'||t==='numero')?[{c:'',v:'',a:false,on:true}]:[],nueva:true};
+    pila.pop();ir('admEdit');
+  };
+}
+
+function admEdit(){
+  if(!edit){pila=['adm'];return render()}
+  const l=edit,unico=l.tipo==='texto'||l.tipo==='numero',conCod=['codigo','rango','par','area'].includes(l.tipo),conAl=l.tipo==='codigo',esArea=l.tipo==='area';
+  cab(l.nombre,`${l.formato} · ${TIPOS[l.tipo]}`);
+  const ph={codigo:['Código','Descripción'],par:['Código','Nombre'],rango:['Rango (ej. 1-30)','Nombre de la zona'],area:['Localiz.','Área'],lista:['','Texto']}[l.tipo]||['','Valor'];
+  $('#scr').innerHTML=`
+  <label class="f">Nombre de la lista<input type="text" id="eNom" value="${esc(l.nombre)}"></label>
+  ${unico?`<label class="f">${l.tipo==='numero'?'Número':'Texto'}${l.tipo==='numero'?`<input type="number" id="eUni" value="${esc(l.items[0].v)}">`:`<textarea id="eUni">${esc(l.items[0].v)}</textarea>`}</label>`:`
+  <p class="note">${conAl?'Marca <b>Alerta</b> en los valores que cuentan como hallazgo o no conformidad (se pintan en rojo y envían correo). ':''}${l.id.startsWith('ft17.consumo')||l.id.startsWith('ft17.incidencia')||l.id.startsWith('ft17.recebado')?'El <b>primer</b> ítem activo es el valor por defecto ("sin novedad"). ':''}Para dejar de usar un ítem, <b>desactívalo</b> en lugar de borrarlo: así los registros antiguos siguen entendiéndose.</p>
+  <div id="eItems" style="display:flex;flex-direction:column;gap:8px">
+  ${l.items.map((x,i)=>`<div class="card" style="display:flex;flex-direction:column;gap:8px;${x.on?'':'opacity:.55'}" data-i="${i}">
+    <div style="display:flex;gap:6px;align-items:flex-start">
+      <span class="mono" style="color:var(--muted);padding-top:12px;min-width:22px">${i+1}</span>
+      ${conCod?`<input type="text" data-f="c" value="${esc(x.c)}" placeholder="${ph[0]}" style="width:${l.tipo==='rango'?'96px':'84px'};flex:none">`:''}
+      <textarea data-f="v" rows="1" placeholder="${ph[1]}" style="flex:1;min-width:0;min-height:46px">${esc(x.v)}</textarea>
+    </div>
+    ${esArea?`<textarea data-f="e" placeholder="Aspectos a considerar" style="min-height:46px">${esc(x.e||'')}</textarea>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><label class="f" style="flex-direction:row;align-items:center;gap:6px">Frecuencia <select data-f="f">${FRECS.map(f=>`<option ${x.f===f?'selected':''}>${f}</option>`).join('')}</select></label>
+      <label style="display:flex;gap:6px;align-items:center;font-size:14px"><input type="checkbox" data-f="a" ${x.a?'checked':''}> Monitoreo de aves</label></div>`:''}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+      <button class="pill ${x.on?'ok':''}" data-act="on" style="cursor:pointer;padding:7px 10px">${x.on?'Activo':'Inactivo'}</button>
+      ${conAl?`<button class="pill ${x.a?'bad':''}" data-act="a" style="cursor:pointer;padding:7px 10px">${x.a?'⚠ Alerta':'Sin alerta'}</button>`:''}
+      <span style="flex:1"></span>
+      <button class="pill" data-act="up" style="cursor:pointer;padding:7px 10px" aria-label="Subir">↑</button>
+      <button class="pill" data-act="down" style="cursor:pointer;padding:7px 10px" aria-label="Bajar">↓</button>
+      <button class="pill" data-act="del" style="cursor:pointer;padding:7px 10px;color:var(--bad)" aria-label="Eliminar">Eliminar</button>
+    </div></div>`).join('')}
+  </div>
+  <button class="btn ghost" id="eAdd">+ Agregar ítem</button>`}
+  <button class="btn" id="eSave">Guardar cambios</button>
+  <p class="note mono">ID: ${esc(l.id)}</p>`;
+  const leer=()=>{l.nombre=$('#eNom').value.trim()||l.nombre;
+    if(unico){l.items[0].v=$('#eUni').value.trim();return}
+    $('#eItems').querySelectorAll('[data-i]').forEach(r=>{const x=l.items[+r.dataset.i];const c=r.querySelector('[data-f="c"]');if(c)x.c=c.value.trim();x.v=r.querySelector('[data-f="v"]').value.trim();if(esArea){x.e=r.querySelector('[data-f="e"]').value.trim();x.f=r.querySelector('[data-f="f"]').value;x.a=r.querySelector('[data-f="a"]').checked}})};
+  if(!unico){
+    $('#eItems').onclick=e=>{const b=e.target.closest('[data-act]');if(!b)return;leer();const i=+b.closest('[data-i]').dataset.i,it=l.items;
+      ({on:()=>it[i].on=!it[i].on,a:()=>it[i].a=!it[i].a,up:()=>{if(i>0)[it[i-1],it[i]]=[it[i],it[i-1]]},down:()=>{if(i<it.length-1)[it[i+1],it[i]]=[it[i],it[i+1]]},del:()=>it.splice(i,1)})[b.dataset.act]();admEdit()};
+    $('#eAdd').onclick=()=>{leer();l.items.push(esArea?{c:'',v:'',e:'',f:'Diario',a:false,on:true}:{c:'',v:'',a:false,on:true});admEdit();const rows=$('#eItems').querySelectorAll('[data-i]');const last=rows[rows.length-1];(last.querySelector('[data-f="c"]')||last.querySelector('[data-f="v"]')).focus()};
+  }
+  $('#eSave').onclick=async e=>{
+    leer();
+    l.items=l.items.filter(x=>x.v||x.c||unico);
+    const err=validarLista(l);if(err)return toast(err,3500);
+    e.target.disabled=true;e.target.textContent='Guardando…';
+    const lista={id:l.id,formato:l.formato,nombre:l.nombre,tipo:l.tipo,items:l.items};
+    try{
+      if(!MODO_PRUEBA){const r=await enviar({...cred(),accion:'guardarLista',lista});if(!r.ok)throw new Error(r.error)}
+      const rem=store.get('listas',{listas:{}});rem.listas=rem.listas||{};rem.listas[l.id]=lista;rem.ts=Date.now();store.set('listas',rem);cargarCatalogo();
+      edit=null;toast(MODO_PRUEBA?'Guardado en este equipo (modo prueba)':'Lista guardada ✓');pila.pop();render();
+    }catch(err){e.target.disabled=false;e.target.textContent='Guardar cambios';toast('No se pudo guardar: '+err.message,3500)}
+  };
+}
+/* ---------- usuarios y permisos ---------- */
+let editU=null;
+async function admUsr(){
+  cab('Usuarios y permisos',MODO_PRUEBA?'Modo prueba: solo en este equipo':'Se guardan en Google Sheets');
+  let us;
+  if(MODO_PRUEBA)us=usuariosPrueba();
+  else{
+    us=store.get('usuarios_admin',null);
+    if(!us)$('#scr').innerHTML='<p class="note">Cargando usuarios…</p>';
+    try{const r=await fetch(C.APPS_SCRIPT_URL+'?accion=usuariosAdmin'+credQS());const j=await r.json();if(j.ok){us=j.usuarios;store.set('usuarios_admin',us)}else if(!us)return $('#scr').innerHTML=`<p class="note">${esc(j.error)}</p>`}
+    catch(e){if(!us)return $('#scr').innerHTML='<p class="note">Se necesita señal para administrar usuarios.</p>'}
+    if(vista()!=='admUsr')return;
+  }
+  const mods=MODULOS(),nom=id=>id==='ADMIN'?'Admin':id==='VOBO'?'V°B°':id==='EDITAR'?'Editar':id;
+  $('#scr').innerHTML=`
+  <button class="btn" id="nuevoU">+ Nuevo usuario</button>
+  <div class="banner ok">El usuario <b>admin</b> (contraseña maestra ADMIN_PIN del Apps Script) siempre tiene acceso a todo y no aparece en esta lista.</div>
+  ${us.length?us.map(u=>`<button class="mi" data-u="${esc(u.id)}" style="${u.activo===false?'opacity:.55':''}"><span class="tx"><b>${esc(u.nombre)}</b><small><span class="mono">@${esc(u.usuario||'—')}</span>${u.cargo?' · '+esc(u.cargo):''}${u.activo===false?' · Inactivo':''}</small>
+    <span style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">${(u.permisos||[]).length?(u.permisos||[]).map(p=>`<span class="pill ${['ADMIN','VOBO','EDITAR'].includes(p)?'warn':'ok'}">${esc(nom(p))}</span>`).join(''):'<span class="pill bad">Sin ingreso</span>'}</span></span></button>`).join(''):'<p class="note">Aún no hay usuarios. Crea el primero.</p>'}`;
+  $('#nuevoU').onclick=()=>{editU={id:'',nombre:'',usuario:'',cargo:'',permisos:[],activo:true,nuevo:true};ir('admUsrEdit')};
+  $('#scr').querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{editU=JSON.parse(JSON.stringify(us.find(u=>u.id===b.dataset.u)));ir('admUsrEdit')});
+}
+function admUsrEdit(){
+  if(!editU){pila=['home','adm','admUsr'];return render()}
+  const u=editU,mods=MODULOS();
+  cab(u.nuevo?'Nuevo usuario':u.nombre,'Usuarios y permisos');
+  $('#scr').innerHTML=`
+  <div class="card" style="display:flex;flex-direction:column;gap:12px">
+    <label class="f">Nombres y apellidos (aparece como "Inspeccionado por")<input type="text" id="uNom" value="${esc(u.nombre)}" autocomplete="off"></label>
+    <label class="f">Cargo / área (opcional)<input type="text" id="uCar" value="${esc(u.cargo||'')}" placeholder="Ej.: Operario de saneamiento"></label>
+    <label class="f">Usuario para ingresar (sin espacios, ej.: rhuaman)<input type="text" id="uUsr" value="${esc(u.usuario||'')}" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></label>
+    <label class="f">${u.nuevo?'Contraseña (mínimo 4 caracteres)':'Nueva contraseña (déjala vacía para mantener la actual)'}<span class="pw"><input type="password" id="uPin" autocomplete="new-password" maxlength="30"><button type="button" id="uVer">Ver</button></span></label>
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;gap:10px">
+    <div class="row"><b>Tiene ingreso a:</b><span style="display:flex;gap:6px"><button class="pill" id="uTodo" style="cursor:pointer">Todo</button><button class="pill" id="uNada" style="cursor:pointer">Nada</button></span></div>
+    ${mods.map(m=>`<label style="display:flex;gap:10px;align-items:center;font-size:15px;padding:6px 0;border-bottom:1px solid var(--line)"><input type="checkbox" data-m="${m.id}" style="width:22px;height:22px;flex:none" ${(u.permisos||[]).includes(m.id)?'checked':''}> <span>${esc(m.nombre)}${m.id==='ADMIN'?'<br><small class="note">Puede crear usuarios y cambiar las listas</small>':m.id==='VOBO'?'<br><small class="note">Firma el visto bueno de los registros de los módulos a los que tiene ingreso</small>':m.id==='EDITAR'?'<br><small class="note">Puede corregir o borrar registros ya enviados (queda copia en el Sheets)</small>':''}</span></label>`).join('')}
+  </div>
+  <div class="card row"><span><b>Estado</b><br><small class="note">Un usuario inactivo no puede ingresar, pero sus registros se conservan.</small></span><button class="pill ${u.activo!==false?'ok':'bad'}" id="uAct" style="cursor:pointer;padding:8px 12px">${u.activo!==false?'Activo':'Inactivo'}</button></div>
+  <button class="btn" id="uSave">Guardar usuario</button>`;
+  const leer=()=>{u.nombre=$('#uNom').value.trim();u.cargo=$('#uCar').value.trim();u.usuario=$('#uUsr').value.trim().toLowerCase();u.permisos=[...$('#scr').querySelectorAll('[data-m]')].filter(c=>c.checked).map(c=>c.dataset.m)};
+  $('#uVer').onclick=()=>{const i=$('#uPin');i.type=i.type==='password'?'text':'password';$('#uVer').textContent=i.type==='password'?'Ver':'Ocultar'};
+  $('#uTodo').onclick=()=>$('#scr').querySelectorAll('[data-m]').forEach(c=>c.checked=true);
+  $('#uNada').onclick=()=>$('#scr').querySelectorAll('[data-m]').forEach(c=>c.checked=false);
+  $('#uAct').onclick=()=>{leer();u.activo=u.activo===false;admUsrEdit()};
+  $('#uSave').onclick=async e=>{
+    leer();const pin=$('#uPin').value.trim();
+    if(!u.nombre)return toast('Escribe el nombre');
+    if(!/^[a-z0-9._-]{3,20}$/.test(u.usuario||''))return toast('El usuario debe tener de 3 a 20 letras o números, sin espacios');
+    if(u.usuario==='admin')return toast('"admin" está reservado para el Administrador');
+    if((u.nuevo||pin)&&(pin.length<4||pin.length>30))return toast('La contraseña debe tener al menos 4 caracteres');
+    const yo=sesion();
+    if(u.id&&u.id===yo.uid&&(!u.permisos.includes('ADMIN')||u.activo===false))return toast('No puedes quitarte a ti misma el acceso de administración');
+    e.target.disabled=true;e.target.textContent='Guardando…';
+    const datos={id:u.nuevo?'':u.id,nombre:u.nombre,usuario:u.usuario,cargo:u.cargo,permisos:u.permisos,activo:u.activo!==false,pin:pin||''};
+    try{
+      if(MODO_PRUEBA){const l=usuariosPrueba().slice();if(l.some(x=>x.id!==datos.id&&x.nombre.toLowerCase()===datos.nombre.toLowerCase()))throw new Error('Ya existe una persona con ese nombre');if(l.some(x=>x.id!==datos.id&&(x.usuario||'')===datos.usuario))throw new Error('Ese usuario ya está en uso');
+        if(!datos.id)datos.id='U'+Date.now().toString(36).toUpperCase();const i=l.findIndex(x=>x.id===datos.id);const g={...datos};delete g.pin;if(i>=0)l[i]=g;else l.push(g);store.set('usuarios_prueba',l)}
+      else{const r=await enviar({...cred(),accion:'guardarUsuario',usuario:datos});store.del('usuarios_admin')}
+      editU=null;toast(MODO_PRUEBA?'Usuario guardado en este equipo (modo prueba)':'Usuario guardado ✓');pila.pop();render();
+    }catch(err){e.target.disabled=false;e.target.textContent='Guardar usuario';toast('No se pudo guardar: '+err.message,3500)}
+  };
+}
+
+/* ---------- correos de alerta (nombre, cargo, correo y de qué registros recibe alertas) ---------- */
+let editC=null;
+const correosPrueba=()=>store.get('correos_prueba',[]);
+const MOD_ALERTA=()=>[...Object.entries(C.formatos).map(([k,v])=>({id:k,nombre:`${k} · ${v.titulo}`})),{id:'SST',nombre:'Alertas de salud de visitas (SST)'}];
+async function admCorreos(){
+  cab('Correos de alerta',MODO_PRUEBA?'Modo prueba: solo en este equipo':'Se guardan en Google Sheets');
+  let cs;
+  if(MODO_PRUEBA)cs=correosPrueba();
+  else{
+    cs=store.get('correos_admin',null);
+    if(!cs)$('#scr').innerHTML='<p class="note">Cargando correos…</p>';
+    try{const r=await fetch(C.APPS_SCRIPT_URL+'?accion=correos'+credQS());const j=await r.json();if(j.ok){cs=j.correos;store.set('correos_admin',cs)}else if(!cs)return $('#scr').innerHTML=`<p class="note">${esc(j.error)}</p>`}
+    catch(e){if(!cs)return $('#scr').innerHTML='<p class="note">Se necesita señal para administrar los correos.</p>'}
+    if(vista()!=='admCorreos')return;
+  }
+  $('#scr').innerHTML=`
+  <button class="btn" id="nuevoC">+ Agregar correo</button>
+  <div class="banner ok">Cada persona recibe un correo cuando un registro marcado tiene un hallazgo o no conformidad.${cs.length?'':' Mientras no agregues ninguno, las alertas van al correo puesto en el Apps Script.'}</div>
+  ${cs.length?cs.map(c=>`<button class="mi" data-c="${esc(c.id)}" style="${c.activo===false?'opacity:.55':''}"><span class="ic">✉</span><span class="tx"><b>${esc(c.nombre)}</b><small>${esc(c.cargo||'')}${c.cargo?' · ':''}<span class="mono">${esc(c.correo)}</span>${c.activo===false?' · Inactivo':''}</small>
+    <span style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">${(c.modulos||[]).length?(c.modulos||[]).map(m=>`<span class="pill ${m==='SST'?'warn':'ok'}">${esc(m)}</span>`).join(''):'<span class="pill bad">No recibe alertas</span>'}</span></span></button>`).join(''):'<p class="note">Aún no hay correos registrados.</p>'}`;
+  $('#nuevoC').onclick=()=>{editC={id:'',nombre:'',cargo:'',correo:'',modulos:Object.keys(C.formatos),activo:true,nuevo:true};ir('admCorreoEdit')};
+  $('#scr').querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{editC=JSON.parse(JSON.stringify(cs.find(c=>c.id===b.dataset.c)));ir('admCorreoEdit')});
+}
+function admCorreoEdit(){
+  if(!editC){pila=['home','adm','admCorreos'];return render()}
+  const c=editC;
+  cab(c.nuevo?'Agregar correo':c.nombre,'Correos de alerta');
+  $('#scr').innerHTML=`
+  <div class="card" style="display:flex;flex-direction:column;gap:12px">
+    <label class="f">Nombres y apellidos<input type="text" id="cNom" value="${esc(c.nombre)}" autocomplete="off"></label>
+    <label class="f">Cargo<input type="text" id="cCar" value="${esc(c.cargo||'')}" placeholder="Ej.: Jefa de Calidad, Supervisora de Saneamiento, Jefe de SST"></label>
+    <label class="f">Correo<input type="email" id="cCor" value="${esc(c.correo)}" autocomplete="off" autocapitalize="none" placeholder="nombre@packingdelcarmen.com"></label>
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;gap:10px">
+    <div class="row"><b>Recibe alertas de:</b><span style="display:flex;gap:6px"><button class="pill" id="cTodo" style="cursor:pointer">Todo</button><button class="pill" id="cNada" style="cursor:pointer">Nada</button></span></div>
+    ${MOD_ALERTA().map(m=>`<label style="display:flex;gap:10px;align-items:center;font-size:15px;padding:6px 0;border-bottom:1px solid var(--line)"><input type="checkbox" data-m="${m.id}" style="width:22px;height:22px;flex:none" ${(c.modulos||[]).includes(m.id)?'checked':''}> <span>${esc(m.nombre)}${m.id==='SST'?'<br><small class="note">Cuando una visita declara malestar de salud</small>':''}</span></label>`).join('')}
+  </div>
+  <div class="card row"><span><b>Estado</b><br><small class="note">Un correo inactivo deja de recibir alertas.</small></span><button class="pill ${c.activo!==false?'ok':'bad'}" id="cAct" style="cursor:pointer;padding:8px 12px">${c.activo!==false?'Activo':'Inactivo'}</button></div>
+  <button class="btn" id="cSave">Guardar</button>
+  ${c.nuevo?'':'<button class="btn ghost" id="cTest">Enviar correo de prueba</button>'}`;
+  const leer=()=>{c.nombre=$('#cNom').value.trim();c.cargo=$('#cCar').value.trim();c.correo=$('#cCor').value.trim().toLowerCase();c.modulos=[...$('#scr').querySelectorAll('[data-m]')].filter(x=>x.checked).map(x=>x.dataset.m)};
+  $('#cTodo').onclick=()=>$('#scr').querySelectorAll('[data-m]').forEach(x=>x.checked=true);
+  $('#cNada').onclick=()=>$('#scr').querySelectorAll('[data-m]').forEach(x=>x.checked=false);
+  $('#cAct').onclick=()=>{leer();c.activo=c.activo===false;admCorreoEdit()};
+  if($('#cTest'))$('#cTest').onclick=async()=>{leer();if(MODO_PRUEBA)return toast('En modo prueba no se envían correos');
+    try{await enviar({...cred(),accion:'correoPrueba',para:c.correo});toast('Correo de prueba enviado a '+c.correo,3500)}catch(e){toast('No se pudo enviar: '+e.message,3500)}};
+  $('#cSave').onclick=async e=>{
+    leer();
+    if(!c.nombre)return toast('Escribe el nombre');
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c.correo))return toast('Escribe un correo válido');
+    e.target.disabled=true;e.target.textContent='Guardando…';
+    const datos={id:c.nuevo?'':c.id,nombre:c.nombre,cargo:c.cargo,correo:c.correo,modulos:c.modulos,activo:c.activo!==false};
+    try{
+      if(MODO_PRUEBA){const l=correosPrueba().slice();if(!datos.id)datos.id='C'+Date.now().toString(36).toUpperCase();const i=l.findIndex(x=>x.id===datos.id);if(i>=0)l[i]=datos;else l.push(datos);store.set('correos_prueba',l)}
+      else{await enviar({...cred(),accion:'guardarCorreo',correo:datos});store.del('correos_admin')}
+      editC=null;toast(MODO_PRUEBA?'Guardado en este equipo (modo prueba)':'Correo guardado ✓');pila.pop();render();
+    }catch(err){e.target.disabled=false;e.target.textContent='Guardar';toast('No se pudo guardar: '+err.message,3500)}
+  };
+}
+
+function validarLista(l){
+  if(l.tipo==='numero'&&!(Number(l.items[0].v)>0))return 'Escribe un número mayor a 0';
+  if((l.tipo==='texto')&&!l.items[0].v)return 'El texto no puede quedar vacío';
+  if(l.tipo==='par'||l.tipo==='area'){if(l.items.some(x=>!x.c||!x.v))return 'Cada ítem necesita código y nombre'}
+  if(l.tipo==='codigo'||l.tipo==='rango'){
+    if(l.items.some(x=>!x.c||!x.v))return 'Cada ítem necesita '+(l.tipo==='rango'?'rango y nombre':'código y descripción');
+    const cs=l.items.map(x=>x.c.toUpperCase());if(new Set(cs).size!==cs.length)return 'Hay códigos repetidos';
+  }
+  if(l.tipo==='rango'){
+    if(l.items.some(x=>!/^\d+(-\d+)?$/.test(x.c)))return 'Los rangos deben escribirse así: 1-30 (o un solo número)';
+    const r=l.items.filter(x=>x.on).map(x=>{const [a,b]=x.c.split('-').map(Number);return[a,b||a]}).sort((p,q)=>p[0]-q[0]);
+    for(let i=1;i<r.length;i++)if(r[i][0]<=r[i-1][1])return `Los rangos ${r[i-1].join('-')} y ${r[i].join('-')} se cruzan`;
+  }
+  if(l.tipo!=='texto'&&l.tipo!=='numero'&&!l.items.some(x=>x.on))return 'Debe quedar al menos un ítem activo';
+  return '';
+}
+
+/* ===================== historial ===================== */
+function hist(){
+  cab('Registros enviados','Desde este celular');
+  const h=store.get('historial',[]),q=store.get('cola',[]).length;
+  $('#scr').innerHTML=(q?`<div class="banner warn">${q} registro(s) esperando señal para enviarse. <button class="pill" id="reint" style="cursor:pointer">Reintentar ahora</button></div>`:'')+
+  (h.length?h.map(x=>`<div class="card row"><span><b>${x.formato}</b> · ${x.fecha}<br><small class="note mono">${x.id}</small></span><span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${x.hallazgos?`<span class="pill bad">${x.hallazgos} hallazgo(s)</span>`:''}<span class="pill ${x.estado==='Enviado'?'ok':'warn'}">${x.estado}</span></span></div>`).join(''):'<p class="note">Aún no hay registros enviados desde este celular.</p>');
+  const r=$('#reint');if(r)r.onclick=procesarCola;
+}
+
+/* ===================== arranque ===================== */
+(function(){
+  // si el QR se abrió con la cámara del celular: index.html?ceb=23
+  const n=numDeQR(location.search);
+  if(n){store.set('cebPend',n);history.replaceState(null,'',location.pathname)}
+  limpiarVisitasViejas();
+  render();
+  revalidar();
+  abrirPendiente();
+  procesarCola();
+})();
+</script>
+</body>
+</html>
